@@ -1,32 +1,28 @@
 
+from IPython.display import Image, Markdown
+
 def what_can_vincent_do():
     """Shows Vincent's main capabilities through a visual demonstration."""
-    from IPython.display import Image
-    return Image(filename="content/data/what_do_vincent_do.png")
-
+    return Image(filename="data/what_do_vincent_do.png")
 def use_cases_word_cloud():
     """Displays a word cloud of Vincent's common use cases."""
-    from IPython.display import Image
-    return Image(filename="content/data/word_cloud.png")
+    return Image(filename="data/word_cloud.png")
 
 def download_vincent():
     """Provides a link to download Vincent from the VS Code marketplace."""
-    from IPython.display import Markdown
-    return Markdown("[Download Vincent from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=BespoAI.vincent&ssr=false#overview)")
+    return Markdown("[Download Vincent](https://marketplace.visualstudio.com/items?itemName=BespoAI.vincent&ssr=false#overview)")
 
 def privacy():
     """Understand Vincent's privacy and security principles."""
-    return "Vincent offers self-hosting with support for your own model provider API key. This ensures that no data ever leaves your secure cloud environment, keeping your workflows private and compliant."
+    return print("Vincent offers self-hosting with support for your own model provider API key. This ensures that no data ever leaves your secure cloud environment, keeping your workflows private and compliant.")
 
 def extendable():
     """Learn how to customize and extend Vincent for your workflows."""
-    from IPython.display import Image
-    return Image(filename="content/data/extendable.png")
+    return Image(filename="data/extendable.png")
 
 def manifesto():
     """Explore the vision, philosophy, and mission behind Vincent."""
-    with open('content/data/manifesto.md', 'r') as f:
-        from IPython.display import Markdown
+    with open('data/manifesto.md', 'r') as f:
         return Markdown(f.read())
 
 def features():

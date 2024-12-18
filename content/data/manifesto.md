@@ -16,7 +16,7 @@ This, together with the fact that notebooks did not get the same AI love that ot
 
 Appropriately, we aim to discover new ways to use this technology for ourselves and our fellow researchers, to make the creative act of research the best it can be.
 
-# Some Thoughts
+# Principles
 
 Here are some principles we discovered, that we use to guide us. At least for now:
 
