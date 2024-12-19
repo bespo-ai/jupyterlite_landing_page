@@ -8,9 +8,9 @@ def use_cases_word_cloud():
     """Displays a word cloud of Vincent's common use cases."""
     return Image(filename="data/word_cloud.png")
 
-def download_vincent():
-    """Provides a link to download Vincent from the VS Code marketplace."""
-    return Markdown("[Download Vincent](https://marketplace.visualstudio.com/items?itemName=BespoAI.vincent&ssr=false#overview)")
+def join_waitlist():
+    """Provides a link to join the waitlist."""
+    return Markdown("[Waitlist](https://marketplace.visualstudio.com/items?itemName=BespoAI.vincent&ssr=false#overview)")
 
 def privacy():
     """Understand Vincent's privacy and security principles."""
