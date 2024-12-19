@@ -1,0 +1,17 @@
+{
+  "name": "jupyterlite_landing_page",
+  "version": "1.0.0",
+  "description": "[![lite-badge](https://jupyterlite.rtfd.io/en/latest/_static/badge.svg)](https://jupyterlite.github.io/demo)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@jupyterlab/application": "^4.3.4",
+    "@lumino/widgets": "^2.5.0",
+    "typescript": "^5.7.2"
+  }
+}
