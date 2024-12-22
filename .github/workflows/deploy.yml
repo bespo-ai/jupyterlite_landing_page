@@ -28,6 +28,10 @@ jobs:
           jupyter lite build --contents content --output-dir dist
       - name: Run Script to Inject Custom JS
         run: python script.py
+      - name: Copy data directory
+        run: |
+          mkdir -p dist/data
+          cp -r content/data dist/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

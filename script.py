@@ -131,20 +131,16 @@ new_script = '''
     }
 
     function setDarkTheme() {
-        document.body.classList.add('jp-mod-darkMode');
-        // Add dark theme CSS variables
-        document.documentElement.style.setProperty('--jp-layout-color0', '#010409');
-        document.documentElement.style.setProperty('--jp-layout-color1', '#0d1117');
-        document.documentElement.style.setProperty('--jp-layout-color2', '#21262d');
-        document.documentElement.style.setProperty('--jp-layout-color3', '#161b22');
-        document.documentElement.style.setProperty('--jp-layout-color4', '#30363d');
+        // Let JupyterLab Night theme handle dark mode
+        // This function is kept for potential future theme-related needs
+        console.log('Using JupyterLab Night theme');
     }
 
     function triggerInitialScroll() {
-        // Small scroll to ensure notebook renders properly
+        // Minimal scroll to trigger notebook render without visible movement
         window.scrollBy({
-            top: 10,
-            behavior: 'smooth'
+            top: 1,
+            behavior: 'instant'
         });
     }
 
@@ -166,6 +162,20 @@ new_script = '''
                     commandRegistry.removeKeyBinding('shift-enter');
                     // Add the new Enter binding
                     commandRegistry.addKeyBinding(runShortcut);
+                    
+                    // Add direct keydown event listener for mobile compatibility
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' && !event.shiftKey) {
+                            const activeCell = document.querySelector('.jp-Notebook-cell.jp-mod-active');
+                            if (activeCell && document.activeElement.tagName !== 'INPUT') {
+                                event.preventDefault(); // Prevent default only when we're handling it
+                                const runButton = activeCell.querySelector('.jp-RunIcon');
+                                if (runButton) {
+                                    runButton.click();
+                                }
+                            }
+                        }
+                    }, { capture: true }); // Use capture to handle event before default handlers
                 }
             } catch (error) {
                 console.warn('Failed to update keyboard shortcuts:', error);
@@ -212,10 +222,10 @@ new_style = '''
     }
 
     .step-message {
-        color: #d7d7dd;
+        color: var(--jp-content-font-color1);
         margin-bottom: 10px;
         font-style: italic;
-        background-color: rgba(47, 44, 61, 0.8);
+        background-color: var(--jp-layout-color2);
         padding: 8px 16px;
         border-radius: 8px;
     }
@@ -224,18 +234,18 @@ new_style = '''
         display: flex;
         justify-content: space-between;
         max-width: 800px;
-        background-color: #2f2c3d;
+        background-color: var(--jp-layout-color2);
         border-radius: 30px;
         width: 100%;
-        color: #d7d7dd;
+        color: var(--jp-content-font-color1);
         min-height: 100px;
     }
 
     #chat-input {
         border: 0;
-        color: #d7d7dd;
+        color: var(--jp-content-font-color1);
         border-radius: 30px;
-        background-color: #2f2c3d;
+        background-color: var(--jp-layout-color2);
         max-width: calc(100vw - 20px);
         width: calc(100% - 150px);
         padding: 10px;
@@ -244,7 +254,7 @@ new_style = '''
     }
 
     input#chat-input::placeholder {
-        color: #d7d7dd;
+        color: var(--jp-content-font-color3);
     }
 
     .send-button {
@@ -260,8 +270,19 @@ new_style = '''
         box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
     }
 
-    /* Mobile markdown rendering fixes */
+    /* Mobile markdown rendering and zoom fixes */
     @media (max-width: 768px) {
+        /* Prevent zoom on input focus */
+        .jp-Notebook .jp-Cell {
+            touch-action: manipulation;
+            font-size: 16px !important;  /* Prevent iOS auto-zoom */
+        }
+        
+        .jp-InputArea-editor {
+            font-size: 16px !important;  /* Prevent iOS auto-zoom */
+            touch-action: manipulation;
+        }
+
         .jp-Notebook .jp-Cell .jp-RenderedMarkdown {
             font-size: 16px;
             line-height: 1.4;
@@ -269,6 +290,7 @@ new_style = '''
             overflow-wrap: break-word;
             padding: 8px;
             max-width: 100%;
+            touch-action: manipulation;
         }
 
         .jp-RenderedMarkdown img {
@@ -279,6 +301,7 @@ new_style = '''
         .jp-RenderedMarkdown pre {
             white-space: pre-wrap;
             word-break: break-word;
+            touch-action: manipulation;
         }
 
         .jp-RenderedMarkdown table {
