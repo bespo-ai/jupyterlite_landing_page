@@ -214,26 +214,87 @@ new_script = '''
     }
 
     function changeKeyboardShortcuts() {
-        // Add event listener for Enter key on cells
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                const activeElement = document.activeElement;
-                const cell = activeElement?.closest('.jp-Cell');
-                
-                if (cell && !activeElement.matches('textarea, input')) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    
-                    // Find and click the run button
+        // Enhanced Enter key handling for both desktop and mobile
+        function executeCellAndSelectNext() {
+            // Try multiple methods to execute the cell
+            const methods = [
+                // Method 1: Click the run button
+                () => {
                     const runButton = document.querySelector('.jp-Toolbar-item button[data-command="notebook:run-cell-and-select-next"]');
                     if (runButton) {
                         runButton.click();
+                        return true;
                     }
+                    return false;
+                },
+                // Method 2: Trigger the command directly
+                () => {
+                    const notebook = document.querySelector('.jp-Notebook');
+                    if (notebook && window.jupyterapp) {
+                        window.jupyterapp.commands.execute('notebook:run-cell-and-select-next');
+                        return true;
+                    }
+                    return false;
+                },
+                // Method 3: Simulate Shift+Enter keypress
+                () => {
+                    const event = new KeyboardEvent('keydown', {
+                        key: 'Enter',
+                        code: 'Enter',
+                        shiftKey: true,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    document.activeElement.dispatchEvent(event);
+                    return true;
                 }
+            ];
+
+            // Try each method until one works
+            for (const method of methods) {
+                if (method()) break;
+            }
+        }
+
+        // Handle both keydown and keyup events for better mobile support
+        ['keydown', 'keyup'].forEach(eventType => {
+            document.addEventListener(eventType, function(event) {
+                // Only handle Enter key without shift
+                if (event.key !== 'Enter' || event.shiftKey) return;
+
+                const activeElement = document.activeElement;
+                const cell = activeElement?.closest('.jp-Cell');
+                
+                // Don't interfere with text input
+                if (!cell || activeElement.matches('textarea, input, [contenteditable="true"]')) return;
+
+                // Prevent default only on keydown to avoid double execution
+                if (eventType === 'keydown') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    executeCellAndSelectNext();
+                }
+            }, true);
+        });
+
+        // Add touch event support for mobile
+        document.addEventListener('touchend', function(event) {
+            const target = event.target;
+            const cell = target?.closest('.jp-Cell');
+            
+            // Check if we're in a cell but not in an input area
+            if (cell && !target.matches('textarea, input, [contenteditable="true"]')) {
+                // Small delay to allow virtual keyboard events to process
+                setTimeout(() => {
+                    const activeElement = document.activeElement;
+                    if (activeElement === target) {
+                        executeCellAndSelectNext();
+                    }
+                }, 100);
             }
         }, true);
-        
-        console.log('Enter key shortcut handler installed');
+
+        console.log('Enhanced Enter key and touch handlers installed');
     }
 
     function pollForHeaders() {
