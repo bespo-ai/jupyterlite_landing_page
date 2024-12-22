@@ -7,6 +7,15 @@ output_file_path = 'dist/notebooks/index.html'
 with open(input_file_path, 'r', encoding='utf-8') as file:
     soup = BeautifulSoup(file, 'html.parser')
 
+# Find the head tag
+head_tag = soup.find('head')
+
+# Create and add viewport meta tag to prevent mobile zoom
+viewport_meta = soup.new_tag('meta')
+viewport_meta['name'] = 'viewport'
+viewport_meta['content'] = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+head_tag.append(viewport_meta)
+
 # Find the specific <script> tag to insert after
 target_script = soup.find('script', text=lambda text: text and 'index.html' in text)
 
@@ -121,10 +130,61 @@ new_script = '''
         }, 1000);
     }
 
+    function setDarkTheme() {
+        document.body.classList.add('jp-mod-darkMode');
+        // Add dark theme CSS variables
+        document.documentElement.style.setProperty('--jp-layout-color0', '#010409');
+        document.documentElement.style.setProperty('--jp-layout-color1', '#0d1117');
+        document.documentElement.style.setProperty('--jp-layout-color2', '#21262d');
+        document.documentElement.style.setProperty('--jp-layout-color3', '#161b22');
+        document.documentElement.style.setProperty('--jp-layout-color4', '#30363d');
+    }
+
+    function triggerInitialScroll() {
+        // Small scroll to ensure notebook renders properly
+        window.scrollBy({
+            top: 10,
+            behavior: 'smooth'
+        });
+    }
+
+    function changeKeyboardShortcuts() {
+        // Wait for Jupyter notebook to be fully initialized
+        if (window.jupyter && window.jupyter.notebook) {
+            // Replace Shift+Enter with Enter for running cells
+            const runShortcut = {
+                command: 'notebook:run-cell-and-select-next',
+                keys: ['Enter'],
+                selector: '.jp-Notebook:focus'
+            };
+            
+            // Remove old shortcut and add new one
+            try {
+                const commandRegistry = window.jupyter.commands;
+                if (commandRegistry) {
+                    // Remove the old Shift+Enter binding
+                    commandRegistry.removeKeyBinding('shift-enter');
+                    // Add the new Enter binding
+                    commandRegistry.addKeyBinding(runShortcut);
+                }
+            } catch (error) {
+                console.warn('Failed to update keyboard shortcuts:', error);
+            }
+        } else {
+            // Retry after a short delay if Jupyter is not ready
+            setTimeout(changeKeyboardShortcuts, 100);
+        }
+    }
+
     function pollForHeaders() {
         if (document.querySelector('button.jp-Notebook-footer')) {
             removeNotebookHeaders();
+            setDarkTheme();
             addChatInterface();
+            // Trigger initial scroll after a short delay to ensure content is loaded
+            setTimeout(triggerInitialScroll, 1000);
+            // Initialize keyboard shortcuts
+            changeKeyboardShortcuts();
         } else {
             setTimeout(pollForHeaders, 50);
         }
@@ -198,6 +258,34 @@ new_style = '''
 
     .send-button-highlight {
         box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+    }
+
+    /* Mobile markdown rendering fixes */
+    @media (max-width: 768px) {
+        .jp-Notebook .jp-Cell .jp-RenderedMarkdown {
+            font-size: 16px;
+            line-height: 1.4;
+            /* Ensure no overlapping or hidden overflow */
+            overflow-wrap: break-word;
+            padding: 8px;
+            max-width: 100%;
+        }
+
+        .jp-RenderedMarkdown img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .jp-RenderedMarkdown pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .jp-RenderedMarkdown table {
+            display: block;
+            overflow-x: auto;
+            max-width: 100%;
+        }
     }
 </style>
 '''
