@@ -130,43 +130,56 @@ new_script = '''
         }, 1000);
     }
 
+    // Apply theme immediately
+    const darkThemeStyle = document.createElement('style');
+    darkThemeStyle.textContent = `
+        :root[data-jp-theme-name="JupyterLab Night"] {
+            --jp-layout-color0: #111111;
+            --jp-layout-color1: #212121;
+            --jp-layout-color2: #424242;
+            --jp-layout-color3: #616161;
+            --jp-layout-color4: #757575;
+            
+            --jp-content-font-color0: rgba(255, 255, 255, 1);
+            --jp-content-font-color1: rgba(255, 255, 255, 0.87);
+            --jp-content-font-color2: rgba(255, 255, 255, 0.54);
+            --jp-content-font-color3: rgba(255, 255, 255, 0.38);
+            
+            --jp-brand-color0: #82b1ff;
+            --jp-brand-color1: #2979ff;
+            --jp-brand-color2: #2962ff;
+            --jp-brand-color3: #2962ff;
+        }
+        
+        body {
+            background-color: var(--jp-layout-color0) !important;
+            color: var(--jp-content-font-color1) !important;
+        }
+        
+        .jp-Notebook {
+            background-color: var(--jp-layout-color1) !important;
+        }
+        
+        .jp-Cell {
+            background-color: var(--jp-layout-color1) !important;
+        }
+        
+        .jp-InputArea-editor {
+            background-color: var(--jp-layout-color2) !important;
+            color: var(--jp-content-font-color1) !important;
+        }
+        
+        .jp-OutputArea-output {
+            background-color: var(--jp-layout-color1) !important;
+            color: var(--jp-content-font-color1) !important;
+        }
+    `;
+    document.head.appendChild(darkThemeStyle);
+    
     function setDarkTheme() {
-        // Force dark theme application
         document.documentElement.setAttribute('data-jp-theme-name', 'JupyterLab Night');
         document.documentElement.setAttribute('data-jp-theme-light', 'false');
-        
-        // Add theme-specific styles
-        const style = document.createElement('style');
-        style.textContent = `
-            :root {
-                --jp-layout-color0: #111111;
-                --jp-layout-color1: #212121;
-                --jp-layout-color2: #424242;
-                --jp-layout-color3: #616161;
-                --jp-layout-color4: #757575;
-                
-                --jp-content-font-color0: rgba(255, 255, 255, 1);
-                --jp-content-font-color1: rgba(255, 255, 255, 0.87);
-                --jp-content-font-color2: rgba(255, 255, 255, 0.54);
-                --jp-content-font-color3: rgba(255, 255, 255, 0.38);
-                
-                --jp-brand-color0: #82b1ff;
-                --jp-brand-color1: #2979ff;
-                --jp-brand-color2: #2962ff;
-                --jp-brand-color3: #2962ff;
-            }
-            
-            body {
-                background-color: var(--jp-layout-color0);
-                color: var(--jp-content-font-color1);
-            }
-            
-            .jp-Notebook {
-                background-color: var(--jp-layout-color1);
-            }
-        `;
-        document.head.appendChild(style);
-        console.log('Applied JupyterLab Night theme with custom styles');
+        console.log('Applied JupyterLab Night theme');
     }
 
     function triggerInitialScroll() {
@@ -226,14 +239,23 @@ new_script = '''
             removeNotebookHeaders();
             addChatInterface();
             // Trigger initial scroll after a short delay to ensure content is loaded
-            setTimeout(triggerInitialScroll, 1000);
+            setTimeout(triggerInitialScroll, 100);
             // Initialize keyboard shortcuts
             changeKeyboardShortcuts();
-            // Load manifesto content
-            loadManifesto();
+            // Load manifesto content with retry
+            loadManifestoWithRetry();
         } else {
             setTimeout(pollForHeaders, 50);
         }
+    }
+    
+    function loadManifestoWithRetry(retries = 3) {
+        loadManifesto().catch(error => {
+            console.error('Error loading manifesto:', error);
+            if (retries > 0) {
+                setTimeout(() => loadManifestoWithRetry(retries - 1), 1000);
+            }
+        });
     }
     
     async function loadManifesto() {
