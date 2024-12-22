@@ -32,13 +32,19 @@ new_script = '''
     // Initialize notebook and remove chat containers
     function initializeNotebookAndRemoveChat() {
         // Immediately remove chat-related elements
-        const chatPatterns = ['step 1:', 'Type a message', 'chat'];
+        const chatPatterns = ['step 1:', 'Type a message', 'chat', 'I\'ll start by importing'];
         const chatSelectors = [
             'input[placeholder*="message"]',
             'div[style*="position: fixed"]',
             '.jp-Cell-inputWrapper:empty',
             '*[class*="chat"]',
-            '*[id*="chat"]'
+            '*[id*="chat"]',
+            'div[class*="input"]',
+            'button:not(.jp-Button)',
+            'div:empty',
+            'div.lm-Widget:empty',
+            '[aria-label*="chat"]',
+            '[title*="chat"]'
         ];
 
         function removeElement(el) {
@@ -82,19 +88,71 @@ new_script = '''
 
         // Function to ensure notebook cells are properly initialized
         function initializeNotebookCells() {
-            const cells = document.querySelectorAll('.jp-Cell');
-            cells.forEach((cell, index) => {
-                // Force display
+            // First, remove any existing cells
+            document.querySelectorAll('.jp-Cell').forEach(cell => {
+                if (!cell.textContent.includes('import vincent as v') && !cell.textContent.includes('help(v)')) {
+                    cell.remove();
+                }
+            });
+
+            // Create cells if they don't exist
+            const notebook = document.querySelector('.jp-Notebook');
+            if (notebook) {
+                const cells = document.querySelectorAll('.jp-Cell');
+                if (cells.length !== 2) {
+                    // Clear notebook
+                    notebook.innerHTML = '';
+                    
+                    // Create import cell
+                    const importCell = document.createElement('div');
+                    importCell.className = 'jp-Cell jp-CodeCell';
+                    importCell.innerHTML = `
+                        <div class="jp-Cell-inputWrapper">
+                            <div class="jp-InputArea jp-Cell-inputArea">
+                                <div class="jp-InputPrompt jp-InputArea-prompt">[1]:</div>
+                                <div class="jp-CodeMirrorEditor jp-Editor">
+                                    <div class="CodeMirror cm-s-jupyter">
+                                        <div class="CodeMirror-code">
+                                            <pre>import vincent as v</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Create help cell
+                    const helpCell = document.createElement('div');
+                    helpCell.className = 'jp-Cell jp-CodeCell';
+                    helpCell.innerHTML = `
+                        <div class="jp-Cell-inputWrapper">
+                            <div class="jp-InputArea jp-Cell-inputArea">
+                                <div class="jp-InputPrompt jp-InputArea-prompt">[2]:</div>
+                                <div class="jp-CodeMirrorEditor jp-Editor">
+                                    <div class="CodeMirror cm-s-jupyter">
+                                        <div class="CodeMirror-code">
+                                            <pre>help(v)</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    notebook.appendChild(importCell);
+                    notebook.appendChild(helpCell);
+                }
+            }
+
+            // Ensure all cells are visible
+            document.querySelectorAll('.jp-Cell').forEach((cell, index) => {
                 cell.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
                 
-                // Set input prompt
                 const prompt = cell.querySelector('.jp-InputPrompt');
                 if (prompt) {
                     prompt.textContent = `[${index + 1}]:`;
                 }
 
-
-                // Ensure code content is visible
                 const editor = cell.querySelector('.jp-Editor');
                 if (editor) {
                     editor.style.cssText = 'visibility: visible !important; display: block !important;';
