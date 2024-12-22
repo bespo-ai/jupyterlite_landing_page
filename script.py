@@ -31,42 +31,46 @@ new_script = '''
 
     // Remove any existing chat containers
     function removeExistingChatContainers() {
-        // Function to remove chat-related elements
-        function removeChatElements(node) {
-            if (!node) return;
-            
-            // If this is the chat container itself, remove it
-            if (node.nodeType === 1) { // Element node
-                if (node.textContent && node.textContent.includes('step 1: I\'ll start by importing')) {
+        function removeChatElements() {
+            // Remove all elements containing the step text
+            document.querySelectorAll('*').forEach(node => {
+                if (node.textContent && node.textContent.includes('step 1:')) {
                     node.remove();
-                    return;
                 }
-                
-                // Check for chat input
-                if (node.tagName === 'INPUT' && node.getAttribute('placeholder') === 'Type a message...') {
-                    let element = node;
-                    while (element && element.tagName !== 'BODY') {
-                        const parent = element.parentElement;
-                        element.remove();
-                        element = parent;
-                    }
-                    return;
-                }
-            }
-        }
-        
-        // Initial cleanup
-        document.querySelectorAll('*').forEach(removeChatElements);
-        
-        // Set up an observer to watch for new elements
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                // Handle new nodes
-                mutation.addedNodes.forEach(removeChatElements);
-                
-                // Also check the modified node itself
-                removeChatElements(mutation.target);
             });
+            
+            // Remove all chat inputs and their containers
+            document.querySelectorAll('input[placeholder="Type a message..."]').forEach(input => {
+                let element = input;
+                while (element && element.tagName !== 'BODY') {
+                    const parent = element.parentElement;
+                    element.remove();
+                    element = parent;
+                }
+            });
+
+            // Remove any elements with chat-related classes
+            ['chat-container', 'chat-input', 'chat-message'].forEach(className => {
+                document.querySelectorAll(`.${className}`).forEach(el => el.remove());
+            });
+        }
+
+        // Initial cleanup
+        removeChatElements();
+        
+        // Continuous cleanup every 100ms for the first 5 seconds
+        let attempts = 0;
+        const interval = setInterval(() => {
+            removeChatElements();
+            attempts++;
+            if (attempts >= 50) { // 5 seconds
+                clearInterval(interval);
+            }
+        }, 100);
+        
+        // Also use MutationObserver for dynamic content
+        const observer = new MutationObserver((mutations) => {
+            removeChatElements();
         });
         
         // Start observing the entire document
@@ -75,6 +79,9 @@ new_script = '''
             subtree: true,
             characterData: true
         });
+
+        // Log cleanup attempts
+        console.log('Chat container removal initialized');
     }
     
     // Call removeExistingChatContainers when the document is ready

@@ -5,36 +5,58 @@ def modify_notebook():
     # Read the notebook
     notebook_path = 'content/landing_page.ipynb'
     try:
-        notebook = nbformat.read(notebook_path, nbformat.NO_CONVERT)
-        
-        # Create fresh cells list
-        new_cells = []
+        # Create a completely new notebook
+        notebook = new_notebook()
         
         # Add import vincent cell
         import_cell = new_code_cell(source='import vincent as v')
-        new_cells.append(import_cell)
+        import_cell.metadata = {
+            'trusted': True,
+            'editable': True,
+            'deletable': True
+        }
         
         # Add help(v) cell
         help_cell = new_code_cell(source='help(v)')
-        new_cells.append(help_cell)
+        help_cell.metadata = {
+            'trusted': True,
+            'editable': True,
+            'deletable': True
+        }
         
-        # Create a new notebook with only these cells
-        fresh_notebook = new_notebook()
-        fresh_notebook.cells = new_cells
-        fresh_notebook.metadata = notebook.metadata
+        # Set notebook metadata
+        notebook.metadata = {
+            'kernelspec': {
+                'display_name': 'Python 3 (ipykernel)',
+                'language': 'python',
+                'name': 'python3'
+            },
+            'language_info': {
+                'codemirror_mode': {
+                    'name': 'ipython',
+                    'version': 3
+                },
+                'file_extension': '.py',
+                'mimetype': 'text/x-python',
+                'name': 'python',
+                'nbconvert_exporter': 'python',
+                'pygments_lexer': 'ipython3',
+                'version': '3.8.10'
+            }
+        }
         
-        # Replace the notebook entirely
-        notebook = fresh_notebook
+        # Add cells to notebook
+        notebook.cells = [import_cell, help_cell]
         
-        # Write the modified notebook
+        # Write the notebook
         nbformat.write(notebook, notebook_path)
-        print(f'Successfully modified notebook: {notebook_path}')
-        print('New cell contents:')
-        for i, cell in enumerate(new_cells):
-            print(f'Cell {i + 1}: {cell.source[:50]}...')
+        print(f'Successfully created notebook: {notebook_path}')
+        print('Cell contents:')
+        for i, cell in enumerate(notebook.cells):
+            print(f'Cell {i + 1}: {cell.source}')
             
     except Exception as e:
-        print(f'Error modifying notebook: {str(e)}')
+        print(f'Error creating notebook: {str(e)}')
         raise
 
 if __name__ == '__main__':
