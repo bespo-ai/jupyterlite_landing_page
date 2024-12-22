@@ -31,11 +31,30 @@ new_script = '''
 
     // Remove any existing chat containers
     function removeExistingChatContainers() {
-        const chatElements = document.querySelectorAll('div:contains("step 1: I\'ll start by importing")');
-        chatElements.forEach(element => element.remove());
+        // Remove chat containers and their parent elements
+        const chatContainers = Array.from(document.getElementsByTagName('div')).filter(div => 
+            div.textContent.includes('step 1: I\'ll start by importing') ||
+            div.querySelector('input[placeholder="Type a message..."]')
+        );
         
+        chatContainers.forEach(container => {
+            // Try to remove the entire container and its parent
+            if (container.parentElement) {
+                container.parentElement.remove();
+            }
+            container.remove();
+        });
+        
+        // Also remove any remaining input elements
         const inputElements = document.querySelectorAll('input[placeholder="Type a message..."]');
-        inputElements.forEach(element => element.parentElement?.parentElement?.remove());
+        inputElements.forEach(element => {
+            let parent = element.parentElement;
+            while (parent && parent.tagName !== 'BODY') {
+                const next = parent.parentElement;
+                parent.remove();
+                parent = next;
+            }
+        });
     }
 
     // Apply theme immediately

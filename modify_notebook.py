@@ -21,8 +21,13 @@ def modify_notebook():
         help_cell = new_code_cell(source='help(v)')
         new_cells.append(help_cell)
         
-        # Replace cells in notebook
-        notebook.cells = new_cells
+        # Create a new notebook with only these cells
+        fresh_notebook = new_notebook()
+        fresh_notebook.cells = new_cells
+        fresh_notebook.metadata = notebook.metadata
+        
+        # Replace the notebook entirely
+        notebook = fresh_notebook
         
         # Write the modified notebook
         nbformat.write(notebook, notebook_path)
