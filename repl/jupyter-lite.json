@@ -12,14 +12,24 @@
             "@jupyterlab/apputils-extension:themes": {
                 "theme": "JupyterLab Night",
                 "theme-scrollbars": true
+            },
+            "@jupyterlab/shortcuts-extension:shortcuts": {
+                "notebook:run-cell-and-select-next": {
+                    "keys": ["Enter"],
+                    "selector": ".jp-Notebook:focus"
+                }
             }
         }
     },
     "federated_extensions": [
-        "jupyterlab-night"
+        "jupyterlab-night",
+        "@jupyterlab/theme-dark-extension"
     ]
     }
 }
+  
+  
+  
   
   
   
