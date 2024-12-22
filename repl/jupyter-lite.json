@@ -8,6 +8,13 @@
         ],
         "defaultUrl": "/notebooks",
         "theme": "JupyterLab Night"
+    },
+    "federated_extensions": [
+        "jupyterlab-night"
+    ]
     }
 }
+  
+  
+  
   
