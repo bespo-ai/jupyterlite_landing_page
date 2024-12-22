@@ -36,8 +36,25 @@ new_script = '''
     }
 
     function addChatInterface() {
+        // Function to hide all cells except the first one
+        function hideNonHeroCells() {
+            const cells = document.querySelectorAll('.jp-Cell');
+            for (let i = 1; i < cells.length; i++) {
+                cells[i].style.display = 'none';
+            }
+        }
+
         const addCell = document.querySelector('button.jp-Notebook-footer');
         addCell.style.marginBottom = "50px";
+
+        // Wait for notebook cells to load and hide non-hero cells
+        const checkNotebook = setInterval(() => {
+            const cells = document.querySelectorAll('.jp-Cell');
+            if (cells.length > 0) {
+                clearInterval(checkNotebook);
+                hideNonHeroCells();
+            }
+        }, 100);
 
         const chatInterface = document.createElement('div');
         chatInterface.id = 'chat-interface';
@@ -67,7 +84,23 @@ new_script = '''
             const chatInput = document.getElementById('chat-input');
             await typeText(chatInput, "I'm trying to get users excited. Please analyze Vincent's unique features and use cases...", 50);
             // Highlight send button after typing completes
-            document.querySelector('.send-button').classList.add('send-button-highlight');
+            const sendButton = document.querySelector('.send-button');
+            sendButton.classList.add('send-button-highlight');
+            
+            // Add click handler to send button to show and run cells
+            sendButton.addEventListener('click', () => {
+                // Show all cells
+                const cells = document.querySelectorAll('.jp-Cell');
+                for (let i = 1; i < cells.length; i++) {
+                    cells[i].style.display = '';
+                }
+                
+                // Find and click all run buttons for each cell
+                const runButtons = document.querySelectorAll('.jp-RunIcon');
+                runButtons.forEach(button => {
+                    button.click();
+                });
+            });
             
             // Add new cell with import pandas
             const addCellButton = document.querySelector('button.jp-Notebook-footer');
