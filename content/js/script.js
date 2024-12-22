@@ -1,6 +1,4 @@
-
-<script>
-    function removeNotebookHeaders() {
+function removeNotebookHeaders() {
         document.getElementById('top-panel-wrapper')?.remove();
         document.getElementById('menu-panel-wrapper')?.remove();
         document.getElementsByClassName('jp-NotebookPanel-toolbar')[0]?.remove();
@@ -9,7 +7,7 @@
     // Initialize notebook and remove chat containers
     function initializeNotebookAndRemoveChat() {
         // Immediately remove chat-related elements
-        const chatPatterns = ['step 1:', 'Type a message', 'chat', 'I'll start by importing'];
+        const chatPatterns = ['step 1:', 'Type a message', 'chat', 'I\'ll start by importing'];
         const chatSelectors = [
             // Chat-specific elements
             'input[placeholder*="message"]',
@@ -22,7 +20,7 @@
             // Step and message elements
             'div:contains("step")',
             'div:contains("Step")',
-            'div:contains("I'll start by")',
+            'div:contains("I\'ll start by")',
             // Empty elements
             'div:empty:not(.jp-Cell *)',
             'div.lm-Widget:empty:not(.jp-Cell *)',
@@ -417,49 +415,46 @@
 
     // Start polling
     pollForHeaders();
-</script>
 
-<style>
-    /* Removed chat-related styles */
+    // Add mobile styles
+    const mobileStyles = document.createElement('style');
+    mobileStyles.textContent = `
+        @media (max-width: 768px) {
+            .jp-Notebook .jp-Cell {
+                touch-action: manipulation;
+                font-size: 16px !important;
+            }
+            
+            .jp-InputArea-editor {
+                font-size: 16px !important;
+                touch-action: manipulation;
+            }
 
-    /* Mobile markdown rendering and zoom fixes */
-    @media (max-width: 768px) {
-        /* Prevent zoom on input focus */
-        .jp-Notebook .jp-Cell {
-            touch-action: manipulation;
-            font-size: 16px !important;  /* Prevent iOS auto-zoom */
-        }
-        
-        .jp-InputArea-editor {
-            font-size: 16px !important;  /* Prevent iOS auto-zoom */
-            touch-action: manipulation;
-        }
+            .jp-Notebook .jp-Cell .jp-RenderedMarkdown {
+                font-size: 16px;
+                line-height: 1.4;
+                overflow-wrap: break-word;
+                padding: 8px;
+                max-width: 100%;
+                touch-action: manipulation;
+            }
 
-        .jp-Notebook .jp-Cell .jp-RenderedMarkdown {
-            font-size: 16px;
-            line-height: 1.4;
-            /* Ensure no overlapping or hidden overflow */
-            overflow-wrap: break-word;
-            padding: 8px;
-            max-width: 100%;
-            touch-action: manipulation;
-        }
+            .jp-RenderedMarkdown img {
+                max-width: 100%;
+                height: auto;
+            }
 
-        .jp-RenderedMarkdown img {
-            max-width: 100%;
-            height: auto;
-        }
+            .jp-RenderedMarkdown pre {
+                white-space: pre-wrap;
+                word-break: break-word;
+                touch-action: manipulation;
+            }
 
-        .jp-RenderedMarkdown pre {
-            white-space: pre-wrap;
-            word-break: break-word;
-            touch-action: manipulation;
+            .jp-RenderedMarkdown table {
+                display: block;
+                overflow-x: auto;
+                max-width: 100%;
+            }
         }
-
-        .jp-RenderedMarkdown table {
-            display: block;
-            overflow-x: auto;
-            max-width: 100%;
-        }
-    }
-</style>
+    `;
+    document.head.appendChild(mobileStyles);
