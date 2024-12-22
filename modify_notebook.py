@@ -13,16 +13,20 @@ def modify_notebook():
         import_cell.metadata = {
             'trusted': True,
             'editable': True,
-            'deletable': True
+            'deletable': True,
+            'execution_count': 1
         }
+        import_cell.outputs = []  # Ensure clean outputs
         
         # Add help(v) cell
         help_cell = new_code_cell(source='help(v)')
         help_cell.metadata = {
             'trusted': True,
             'editable': True,
-            'deletable': True
+            'deletable': True,
+            'execution_count': 2
         }
+        help_cell.outputs = []  # Ensure clean outputs
         
         # Set notebook metadata
         notebook.metadata = {
@@ -42,6 +46,11 @@ def modify_notebook():
                 'nbconvert_exporter': 'python',
                 'pygments_lexer': 'ipython3',
                 'version': '3.8.10'
+            },
+            'jupyterlab': {
+                'themes': {
+                    'theme': 'JupyterLab Night'
+                }
             }
         }
         

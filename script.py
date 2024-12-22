@@ -29,66 +29,94 @@ new_script = '''
         document.getElementsByClassName('jp-NotebookPanel-toolbar')[0]?.remove();
     }
 
-    // Remove any existing chat containers
-    function removeExistingChatContainers() {
+    // Initialize notebook and remove chat containers
+    async function initializeNotebookAndRemoveChat() {
+        // Function to remove chat elements
         function removeChatElements() {
-            // Remove all elements containing the step text
-            document.querySelectorAll('*').forEach(node => {
-                if (node.textContent && node.textContent.includes('step 1:')) {
-                    node.remove();
+            const elementsToRemove = Array.from(document.querySelectorAll('*')).filter(el => {
+                if (!el || !el.parentNode) return false;
+                
+                // Check text content
+                const text = el.textContent || '';
+                if (text.includes('step 1:') || text.includes('Type a message')) {
+                    return true;
                 }
+                
+                // Check element attributes
+                const hasMessageInput = el.tagName === 'INPUT' && 
+                    el.getAttribute('placeholder')?.includes('message');
+                const hasChatClass = Array.from(el.classList || [])
+                    .some(cls => cls.toLowerCase().includes('chat'));
+                const hasChatId = el.id?.toLowerCase().includes('chat');
+                const isFixedPosition = el.style?.position === 'fixed';
+                
+                return hasMessageInput || hasChatClass || hasChatId || isFixedPosition;
             });
             
-            // Remove all chat inputs and their containers
-            document.querySelectorAll('input[placeholder="Type a message..."]').forEach(input => {
-                let element = input;
-                while (element && element.tagName !== 'BODY') {
-                    const parent = element.parentElement;
-                    element.remove();
-                    element = parent;
+            elementsToRemove.forEach(el => {
+                try {
+                    el.remove();
+                } catch (e) {
+                    console.error('Error removing element:', e);
                 }
-            });
-
-            // Remove any elements with chat-related classes
-            ['chat-container', 'chat-input', 'chat-message'].forEach(className => {
-                document.querySelectorAll(`.${className}`).forEach(el => el.remove());
             });
         }
 
-        // Initial cleanup
+        // Function to ensure notebook cells are properly initialized
+        function initializeNotebookCells() {
+            const cells = document.querySelectorAll('.jp-Cell');
+            cells.forEach((cell, index) => {
+                // Ensure cell is visible and properly styled
+                cell.style.display = 'block';
+                cell.style.visibility = 'visible';
+                cell.style.opacity = '1';
+                
+                // Add proper cell numbers
+                const prompt = cell.querySelector('.jp-InputPrompt');
+                if (prompt) {
+                    prompt.textContent = `[${index + 1}]:`;
+                }
+            });
+        }
+
+        // Initial cleanup and initialization
         removeChatElements();
+        initializeNotebookCells();
         
-        // Continuous cleanup every 100ms for the first 5 seconds
-        let attempts = 0;
-        const interval = setInterval(() => {
+        // Continuous cleanup and initialization
+        const cleanupInterval = setInterval(() => {
             removeChatElements();
-            attempts++;
-            if (attempts >= 50) { // 5 seconds
-                clearInterval(interval);
-            }
+            initializeNotebookCells();
         }, 100);
         
-        // Also use MutationObserver for dynamic content
-        const observer = new MutationObserver((mutations) => {
+        // Stop interval after 5 seconds
+        setTimeout(() => {
+            clearInterval(cleanupInterval);
+            console.log('Cleanup and initialization completed');
+        }, 5000);
+        
+        // Use MutationObserver for dynamic content
+        const observer = new MutationObserver(() => {
             removeChatElements();
+            initializeNotebookCells();
         });
         
-        // Start observing the entire document
         observer.observe(document.documentElement, {
             childList: true,
             subtree: true,
-            characterData: true
+            characterData: true,
+            attributes: true
         });
 
-        // Log cleanup attempts
-        console.log('Chat container removal initialized');
+
+        console.log('Notebook initialization and chat removal started');
     }
     
-    // Call removeExistingChatContainers when the document is ready
+    // Initialize notebook and remove chat when the document is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', removeExistingChatContainers);
+        document.addEventListener('DOMContentLoaded', initializeNotebookAndRemoveChat);
     } else {
-        removeExistingChatContainers();
+        initializeNotebookAndRemoveChat();
     }
 
     // Apply theme immediately
