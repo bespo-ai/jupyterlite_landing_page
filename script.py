@@ -29,7 +29,14 @@ new_script = '''
         document.getElementsByClassName('jp-NotebookPanel-toolbar')[0]?.remove();
     }
 
-    // No chat-related functionality needed
+    // Remove any existing chat containers
+    function removeExistingChatContainers() {
+        const chatElements = document.querySelectorAll('div:contains("step 1: I\'ll start by importing")');
+        chatElements.forEach(element => element.remove());
+        
+        const inputElements = document.querySelectorAll('input[placeholder="Type a message..."]');
+        inputElements.forEach(element => element.parentElement?.parentElement?.remove());
+    }
 
     // Apply theme immediately
     const darkThemeStyle = document.createElement('style');
@@ -126,6 +133,8 @@ new_script = '''
             // Apply theme first to prevent flash of light theme
             setDarkTheme();
             removeNotebookHeaders();
+            // Remove any chat containers that might exist
+            removeExistingChatContainers();
             // Trigger initial scroll after a short delay to ensure content is loaded
             setTimeout(triggerInitialScroll, 100);
             // Initialize keyboard shortcuts
