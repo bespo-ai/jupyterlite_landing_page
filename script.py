@@ -44,91 +44,7 @@ new_script = '''
         });
     }
 
-    function addChatInterface() {
-        // Function to hide all cells except the first one
-        function hideNonHeroCells() {
-            const cells = document.querySelectorAll('.jp-Cell');
-            for (let i = 1; i < cells.length; i++) {
-                cells[i].style.display = 'none';
-            }
-        }
-
-        const addCell = document.querySelector('button.jp-Notebook-footer');
-        addCell.style.marginBottom = "50px";
-
-        // Wait for notebook cells to load and hide non-hero cells
-        const checkNotebook = setInterval(() => {
-            const cells = document.querySelectorAll('.jp-Cell');
-            if (cells.length > 0) {
-                clearInterval(checkNotebook);
-                hideNonHeroCells();
-            }
-        }, 100);
-
-        const chatInterface = document.createElement('div');
-        chatInterface.id = 'chat-interface';
-        
-        // Create step message
-        const stepMessage = document.createElement('div');
-        stepMessage.className = 'step-message';
-        stepMessage.textContent = "step 1: I'll start by importing ..";
-        chatInterface.appendChild(stepMessage);
-        
-        chatInterface.innerHTML += `
-            <div class="chat-container">
-                <input type="text" id="chat-input" placeholder="Type a message..." />
-                <div style="display: flex; align-items: end; padding: 15px;">
-                    <button class="send-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
-                            <path d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2 160 448c0 17.7 14.3 32 32 32s32-14.3 32-32l0-306.7L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        `;
-        addCell.parentNode.insertBefore(chatInterface, addCell.nextSibling);
-        
-        // Start typing animation after a short delay
-        setTimeout(async () => {
-            const chatInput = document.getElementById('chat-input');
-            await typeText(chatInput, "I'm trying to get users excited. Please analyze Vincent's unique features and use cases...", 50);
-            // Highlight send button after typing completes
-            const sendButton = document.querySelector('.send-button');
-            sendButton.classList.add('send-button-highlight');
-            
-            // Add click handler to send button to show and run cells
-            sendButton.addEventListener('click', () => {
-                // Show all cells
-                const cells = document.querySelectorAll('.jp-Cell');
-                for (let i = 1; i < cells.length; i++) {
-                    cells[i].style.display = '';
-                }
-                
-                // Find and click all run buttons for each cell
-                const runButtons = document.querySelectorAll('.jp-RunIcon');
-                runButtons.forEach(button => {
-                    button.click();
-                });
-            });
-            
-            // Add new cell with import pandas
-            const addCellButton = document.querySelector('button.jp-Notebook-footer');
-            if (addCellButton) {
-                addCellButton.click();
-                // Wait for the new cell to be created
-                setTimeout(() => {
-                    const cells = document.querySelectorAll('.jp-Cell-inputArea');
-                    const lastCell = cells[cells.length - 1];
-                    if (lastCell) {
-                        const editor = lastCell.querySelector('.jp-Editor');
-                        if (editor) {
-                            editor.textContent = 'import pandas';
-                        }
-                    }
-                }, 500);
-            }
-        }, 1000);
-    }
+    // Removed chat interface function
 
     // Apply theme immediately
     const darkThemeStyle = document.createElement('style');
@@ -209,19 +125,7 @@ new_script = '''
                     // Add the new Enter binding
                     commandRegistry.addKeyBinding(runShortcut);
                     
-                    // Add direct keydown event listener for mobile compatibility
-                    document.addEventListener('keydown', (event) => {
-                        if (event.key === 'Enter' && !event.shiftKey) {
-                            const activeCell = document.querySelector('.jp-Notebook-cell.jp-mod-active');
-                            if (activeCell && document.activeElement.tagName !== 'INPUT') {
-                                event.preventDefault(); // Prevent default only when we're handling it
-                                const runButton = activeCell.querySelector('.jp-RunIcon');
-                                if (runButton) {
-                                    runButton.click();
-                                }
-                            }
-                        }
-                    }, { capture: true }); // Use capture to handle event before default handlers
+                    // Removed Enter key event listener - using default Shift+Enter behavior
                 }
             } catch (error) {
                 console.warn('Failed to update keyboard shortcuts:', error);
@@ -237,7 +141,6 @@ new_script = '''
             // Apply theme first to prevent flash of light theme
             setDarkTheme();
             removeNotebookHeaders();
-            addChatInterface();
             // Trigger initial scroll after a short delay to ensure content is loaded
             setTimeout(triggerInitialScroll, 100);
             // Initialize keyboard shortcuts
@@ -301,68 +204,7 @@ new_script = '''
 
 new_style = '''
 <style>
-    #chat-interface {
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: calc(100% - 54px);
-        background: transparent;
-        margin: 0;
-        padding: 0 20px 20px 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        z-index: 10000;
-    }
-
-    .step-message {
-        color: var(--jp-content-font-color1);
-        margin-bottom: 10px;
-        font-style: italic;
-        background-color: var(--jp-layout-color2);
-        padding: 8px 16px;
-        border-radius: 8px;
-    }
-
-    .chat-container {
-        display: flex;
-        justify-content: space-between;
-        max-width: 800px;
-        background-color: var(--jp-layout-color2);
-        border-radius: 30px;
-        width: 100%;
-        color: var(--jp-content-font-color1);
-        min-height: 100px;
-    }
-
-    #chat-input {
-        border: 0;
-        color: var(--jp-content-font-color1);
-        border-radius: 30px;
-        background-color: var(--jp-layout-color2);
-        max-width: calc(100vw - 20px);
-        width: calc(100% - 150px);
-        padding: 10px;
-        margin: 0 10px;
-        z-index: 100000;
-    }
-
-    input#chat-input::placeholder {
-        color: var(--jp-content-font-color3);
-    }
-
-    .send-button {
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        border: none;
-        padding: 3px 6px 6px 6px;
-        transition: box-shadow 0.3s ease;
-    }
-
-    .send-button-highlight {
-        box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
-    }
+    /* Removed chat-related styles */
 
     /* Mobile markdown rendering and zoom fixes */
     @media (max-width: 768px) {
