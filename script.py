@@ -20,13 +20,52 @@ new_script = '''
         document.getElementsByClassName('jp-NotebookPanel-toolbar')[0]?.remove();
     }
 
+    function typeText(element, text, delay = 50) {
+        let i = 0;
+        return new Promise((resolve) => {
+            const interval = setInterval(() => {
+                if (i < text.length) {
+                    element.value += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, delay);
+        });
+    }
+
     function addChatInterface() {
+        // Function to hide all cells except the first one
+        function hideNonHeroCells() {
+            const cells = document.querySelectorAll('.jp-Cell');
+            for (let i = 1; i < cells.length; i++) {
+                cells[i].style.display = 'none';
+            }
+        }
+
         const addCell = document.querySelector('button.jp-Notebook-footer');
         addCell.style.marginBottom = "50px";
 
+        // Wait for notebook cells to load and hide non-hero cells
+        const checkNotebook = setInterval(() => {
+            const cells = document.querySelectorAll('.jp-Cell');
+            if (cells.length > 0) {
+                clearInterval(checkNotebook);
+                hideNonHeroCells();
+            }
+        }, 100);
+
         const chatInterface = document.createElement('div');
         chatInterface.id = 'chat-interface';
-        chatInterface.innerHTML = `
+        
+        // Create step message
+        const stepMessage = document.createElement('div');
+        stepMessage.className = 'step-message';
+        stepMessage.textContent = "step 1: I'll start by importing ..";
+        chatInterface.appendChild(stepMessage);
+        
+        chatInterface.innerHTML += `
             <div class="chat-container">
                 <input type="text" id="chat-input" placeholder="Type a message..." />
                 <div style="display: flex; align-items: end; padding: 15px;">
@@ -39,6 +78,47 @@ new_script = '''
             </div>
         `;
         addCell.parentNode.insertBefore(chatInterface, addCell.nextSibling);
+        
+        // Start typing animation after a short delay
+        setTimeout(async () => {
+            const chatInput = document.getElementById('chat-input');
+            await typeText(chatInput, "I'm trying to get users excited. Please analyze Vincent's unique features and use cases...", 50);
+            // Highlight send button after typing completes
+            const sendButton = document.querySelector('.send-button');
+            sendButton.classList.add('send-button-highlight');
+            
+            // Add click handler to send button to show and run cells
+            sendButton.addEventListener('click', () => {
+                // Show all cells
+                const cells = document.querySelectorAll('.jp-Cell');
+                for (let i = 1; i < cells.length; i++) {
+                    cells[i].style.display = '';
+                }
+                
+                // Find and click all run buttons for each cell
+                const runButtons = document.querySelectorAll('.jp-RunIcon');
+                runButtons.forEach(button => {
+                    button.click();
+                });
+            });
+            
+            // Add new cell with import pandas
+            const addCellButton = document.querySelector('button.jp-Notebook-footer');
+            if (addCellButton) {
+                addCellButton.click();
+                // Wait for the new cell to be created
+                setTimeout(() => {
+                    const cells = document.querySelectorAll('.jp-Cell-inputArea');
+                    const lastCell = cells[cells.length - 1];
+                    if (lastCell) {
+                        const editor = lastCell.querySelector('.jp-Editor');
+                        if (editor) {
+                            editor.textContent = 'import pandas';
+                        }
+                    }
+                }, 500);
+            }
+        }, 1000);
     }
 
     function pollForHeaders() {
@@ -66,8 +146,18 @@ new_style = '''
         margin: 0;
         padding: 0 20px 20px 20px;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
         z-index: 10000;
+    }
+
+    .step-message {
+        color: #d7d7dd;
+        margin-bottom: 10px;
+        font-style: italic;
+        background-color: rgba(47, 44, 61, 0.8);
+        padding: 8px 16px;
+        border-radius: 8px;
     }
 
     .chat-container {
@@ -103,6 +193,11 @@ new_style = '''
         height: 30px;
         border: none;
         padding: 3px 6px 6px 6px;
+        transition: box-shadow 0.3s ease;
+    }
+
+    .send-button-highlight {
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
     }
 </style>
 '''
