@@ -315,17 +315,20 @@ function removeNotebookHeaders() {
             }
         }, true); // Use capture phase to ensure we handle the event first
 
-        // Handle touch events for mobile
+        // Enhanced mobile touch handling
         document.addEventListener('touchend', function(event) {
             const target = event.target;
             const cell = target?.closest('.jp-Cell');
             
             // Check if we're in a cell but not in an input area
             if (cell && !target.matches('textarea, input, [contenteditable="true"]')) {
-                const activeElement = document.activeElement;
-                if (activeElement === target) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Small delay to ensure UI is ready
+                setTimeout(() => {
                     executeCellAndSelectNext();
-                }
+                }, 50);
             }
         }, true);
 

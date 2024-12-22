@@ -32,7 +32,8 @@ def create_clean_notebook():
                         }
                     },
                     '@jupyterlab/shortcuts-extension:shortcuts': {
-                        'notebook:run-cell': [{'selector': '.jp-Notebook:focus', 'keys': ['Enter']}]
+                        'notebook:run-cell': [{'selector': '.jp-Notebook:focus', 'keys': ['Enter']}],
+                        'notebook:run-cell-and-select-next': [{'selector': '.jp-Notebook:focus', 'keys': ['Enter']}]
                     }
                 }
             }
