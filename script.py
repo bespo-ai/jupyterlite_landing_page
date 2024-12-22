@@ -131,9 +131,42 @@ new_script = '''
     }
 
     function setDarkTheme() {
-        // Let JupyterLab Night theme handle dark mode
-        // This function is kept for potential future theme-related needs
-        console.log('Using JupyterLab Night theme');
+        // Force dark theme application
+        document.documentElement.setAttribute('data-jp-theme-name', 'JupyterLab Night');
+        document.documentElement.setAttribute('data-jp-theme-light', 'false');
+        
+        // Add theme-specific styles
+        const style = document.createElement('style');
+        style.textContent = `
+            :root {
+                --jp-layout-color0: #111111;
+                --jp-layout-color1: #212121;
+                --jp-layout-color2: #424242;
+                --jp-layout-color3: #616161;
+                --jp-layout-color4: #757575;
+                
+                --jp-content-font-color0: rgba(255, 255, 255, 1);
+                --jp-content-font-color1: rgba(255, 255, 255, 0.87);
+                --jp-content-font-color2: rgba(255, 255, 255, 0.54);
+                --jp-content-font-color3: rgba(255, 255, 255, 0.38);
+                
+                --jp-brand-color0: #82b1ff;
+                --jp-brand-color1: #2979ff;
+                --jp-brand-color2: #2962ff;
+                --jp-brand-color3: #2962ff;
+            }
+            
+            body {
+                background-color: var(--jp-layout-color0);
+                color: var(--jp-content-font-color1);
+            }
+            
+            .jp-Notebook {
+                background-color: var(--jp-layout-color1);
+            }
+        `;
+        document.head.appendChild(style);
+        console.log('Applied JupyterLab Night theme with custom styles');
     }
 
     function triggerInitialScroll() {
@@ -188,15 +221,54 @@ new_script = '''
 
     function pollForHeaders() {
         if (document.querySelector('button.jp-Notebook-footer')) {
-            removeNotebookHeaders();
+            // Apply theme first to prevent flash of light theme
             setDarkTheme();
+            removeNotebookHeaders();
             addChatInterface();
             // Trigger initial scroll after a short delay to ensure content is loaded
             setTimeout(triggerInitialScroll, 1000);
             // Initialize keyboard shortcuts
             changeKeyboardShortcuts();
+            // Load manifesto content
+            loadManifesto();
         } else {
             setTimeout(pollForHeaders, 50);
+        }
+    }
+    
+    async function loadManifesto() {
+        try {
+            // Load marked.js library
+            if (!window.marked) {
+                const markedScript = document.createElement('script');
+                markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+                await new Promise((resolve, reject) => {
+                    markedScript.onload = resolve;
+                    markedScript.onerror = reject;
+                    document.head.appendChild(markedScript);
+                });
+            }
+            
+            const response = await fetch('../../data/manifesto.md');
+            if (!response.ok) throw new Error('Failed to load manifesto');
+            const text = await response.text();
+            console.log('Loaded manifesto:', text);
+            
+            // Add manifesto content to notebook
+            const cell = document.querySelector('.jp-Cell');
+            if (cell) {
+                const markdown = cell.querySelector('.jp-RenderedMarkdown');
+                if (markdown) {
+                    // Wait for marked to be available
+                    if (window.marked) {
+                        markdown.innerHTML = marked.parse(text);
+                    } else {
+                        console.error('marked library not loaded');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading manifesto:', error);
         }
     }
 
