@@ -6,31 +6,29 @@ function removeNotebookHeaders() {
 
     // Initialize notebook and remove chat containers
     function initializeNotebookAndRemoveChat() {
-        // Immediately remove chat-related elements
-        const chatPatterns = ['step 1:', 'Type a message', 'chat', 'I\'ll start by importing'];
-        const chatSelectors = [
-            // Chat-specific elements
-            'input[placeholder*="message"]',
-            'div[style*="position: fixed"]',
-            '*[class*="chat"]',
-            '*[id*="chat"]',
-            // Input and button elements
-            'input[type="text"]',
-            'button:not(.jp-Button):not(.jp-ToolbarButtonComponent)',
-            // Step and message elements
-            'div:contains("step")',
-            'div:contains("Step")',
-            'div:contains("I\'ll start by")',
-            // Empty elements
-            'div:empty:not(.jp-Cell *)',
-            'div.lm-Widget:empty:not(.jp-Cell *)',
-            // Additional chat-related elements
-            '[aria-label*="chat"]',
-            '[title*="chat"]',
-            '[placeholder*="Type"]',
-            // Remove all cells except first two
-            '.jp-Cell:nth-child(n+3)'
-        ];
+        // Remove all chat-related elements
+        const selectors = [
+                'input[placeholder*="message"]',
+                'div[style*="position: fixed"]',
+                '*[class*="chat"]',
+                '*[id*="chat"]',
+                'input[type="text"]',
+                'button:not(.jp-Button):not(.jp-ToolbarButtonComponent)',
+                'div:contains("step")',
+                'div:contains("Step")',
+                'div:contains("I\'ll start by")',
+                '[aria-label*="chat"]',
+                '[title*="chat"]',
+                '[placeholder*="Type"]',
+                // Additional specific selectors
+                'div[style*="bottom: 0"]',
+                'div[style*="z-index: 1000"]',
+                'div.chat-container',
+                'div.message-container',
+                // Target parent containers that might contain chat elements
+                'div:has(input[placeholder*="message"])',
+                'div:has(button:not(.jp-Button):not(.jp-ToolbarButtonComponent))'
+            ];
 
         function removeElement(el) {
             try {
@@ -46,24 +44,49 @@ function removeNotebookHeaders() {
         function aggressiveCleanup() {
             console.log('Starting aggressive cleanup');
             
-            // Remove all cells except first two
+            // Remove chat elements first
+            selectors.forEach(selector => {
+                try {
+                    document.querySelectorAll(selector).forEach(el => {
+                        if (el && !el.closest('.jp-Cell')) {
+                            el.remove();
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error with selector:', selector, e);
+                }
+            });
+
+            // Clear and reinitialize notebook cells
             const notebook = document.querySelector('.jp-Notebook');
             if (notebook) {
-                const cells = Array.from(notebook.querySelectorAll('.jp-Cell'));
-                cells.slice(2).forEach(cell => cell.remove());
+                notebook.innerHTML = '';
                 
-                // Ensure remaining cells have correct content
-                const expectedCells = [
-                    { content: 'import vincent as v', index: 1 },
-                    { content: 'help(v)', index: 2 }
+                // Create the two required cells
+                const cells = [
+                    { content: 'import vincent as v', type: 'code' },
+                    { content: 'help(v)', type: 'code' }
                 ];
                 
-                cells.slice(0, 2).forEach((cell, idx) => {
-                    const expected = expectedCells[idx];
-                    const editor = cell.querySelector('.jp-Editor');
-                    if (editor) {
-                        editor.querySelector('.CodeMirror-code').innerHTML = `<pre>${expected.content}</pre>`;
-                    }
+                cells.forEach((cellData, index) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'jp-Cell jp-CodeCell jp-Notebook-cell';
+                    cell.setAttribute('data-cell-index', index.toString());
+                    cell.innerHTML = `
+                        <div class="jp-Cell-inputWrapper">
+                            <div class="jp-InputArea jp-Cell-inputArea">
+                                <div class="jp-InputPrompt jp-InputArea-prompt">[${index + 1}]:</div>
+                                <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="code">
+                                    <div class="CodeMirror cm-s-jupyter">
+                                        <div class="CodeMirror-code">
+                                            <pre>${cellData.content}</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    notebook.appendChild(cell);
                 });
             }
 
@@ -267,87 +290,46 @@ function removeNotebookHeaders() {
     }
 
     function changeKeyboardShortcuts() {
-        // Enhanced Enter key handling for both desktop and mobile
+        // Simplified Enter key handling using JupyterLite's built-in command
         function executeCellAndSelectNext() {
-            // Try multiple methods to execute the cell
-            const methods = [
-                // Method 1: Click the run button
-                () => {
-                    const runButton = document.querySelector('.jp-Toolbar-item button[data-command="notebook:run-cell-and-select-next"]');
-                    if (runButton) {
-                        runButton.click();
-                        return true;
-                    }
-                    return false;
-                },
-                // Method 2: Trigger the command directly
-                () => {
-                    const notebook = document.querySelector('.jp-Notebook');
-                    if (notebook && window.jupyterapp) {
-                        window.jupyterapp.commands.execute('notebook:run-cell-and-select-next');
-                        return true;
-                    }
-                    return false;
-                },
-                // Method 3: Simulate Shift+Enter keypress
-                () => {
-                    const event = new KeyboardEvent('keydown', {
-                        key: 'Enter',
-                        code: 'Enter',
-                        shiftKey: true,
-                        bubbles: true,
-                        cancelable: true
-                    });
-                    document.activeElement.dispatchEvent(event);
-                    return true;
-                }
-            ];
-
-            // Try each method until one works
-            for (const method of methods) {
-                if (method()) break;
+            if (window.jupyterapp) {
+                window.jupyterapp.commands.execute('notebook:run-cell-and-select-next');
+                return true;
             }
+            return false;
         }
 
-        // Handle both keydown and keyup events for better mobile support
-        ['keydown', 'keyup'].forEach(eventType => {
-            document.addEventListener(eventType, function(event) {
-                // Only handle Enter key without shift
-                if (event.key !== 'Enter' || event.shiftKey) return;
-
+        // Single event listener for Enter key
+        document.addEventListener('keydown', function(event) {
+            // Only handle Enter key without shift
+            if (event.key === 'Enter' && !event.shiftKey) {
                 const activeElement = document.activeElement;
                 const cell = activeElement?.closest('.jp-Cell');
                 
                 // Don't interfere with text input
                 if (!cell || activeElement.matches('textarea, input, [contenteditable="true"]')) return;
 
-                // Prevent default only on keydown to avoid double execution
-                if (eventType === 'keydown') {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    executeCellAndSelectNext();
-                }
-            }, true);
-        });
+                event.preventDefault();
+                event.stopPropagation();
+                executeCellAndSelectNext();
+            }
+        }, true); // Use capture phase to ensure we handle the event first
 
-        // Add touch event support for mobile
+        // Handle touch events for mobile
         document.addEventListener('touchend', function(event) {
             const target = event.target;
             const cell = target?.closest('.jp-Cell');
             
             // Check if we're in a cell but not in an input area
             if (cell && !target.matches('textarea, input, [contenteditable="true"]')) {
-                // Small delay to allow virtual keyboard events to process
-                setTimeout(() => {
-                    const activeElement = document.activeElement;
-                    if (activeElement === target) {
-                        executeCellAndSelectNext();
-                    }
-                }, 100);
+                const activeElement = document.activeElement;
+                if (activeElement === target) {
+                    executeCellAndSelectNext();
+                }
             }
         }, true);
 
-        console.log('Enhanced Enter key and touch handlers installed');
+        console.log('Simplified Enter key and touch handlers installed');
     }
 
     function pollForHeaders() {
@@ -458,3 +440,4 @@ function removeNotebookHeaders() {
         }
     `;
     document.head.appendChild(mobileStyles);
+})();

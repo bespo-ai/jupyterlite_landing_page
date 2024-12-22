@@ -13,7 +13,16 @@
                 "theme": "JupyterLab Night",
                 "theme-scrollbars": true
             },
-            "@jupyterlab/shortcuts-extension:shortcuts": {}
+            "@jupyterlab/shortcuts-extension:shortcuts": {
+                "notebook:run-cell": [{
+                    "selector": ".jp-Notebook:focus",
+                    "keys": ["Enter"]
+                }],
+                "notebook:run-cell-and-select-next": [{
+                    "selector": ".jp-Notebook:focus",
+                    "keys": ["Enter"]
+                }]
+            }
         }
     },
     "federated_extensions": [
@@ -29,6 +38,9 @@
     ]
     }
 }
+  
+  
+  
   
   
   

@@ -3,5 +3,16 @@
     "theme": "JupyterLab Night",
     "theme-scrollbars": true
   },
-  "shortcuts": []
+  "shortcuts": [
+    {
+      "command": "notebook:run-cell",
+      "keys": ["Enter"],
+      "selector": ".jp-Notebook:focus"
+    },
+    {
+      "command": "notebook:run-cell-and-select-next",
+      "keys": ["Enter"],
+      "selector": ".jp-Notebook:focus"
+    }
+  ]
 }
