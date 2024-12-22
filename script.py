@@ -31,56 +31,58 @@ new_script = '''
 
     // Remove any existing chat containers
     function removeExistingChatContainers() {
-        // Function to recursively remove chat-related elements
-        function removeChatElements() {
-            let removed = false;
+        // Function to remove chat-related elements
+        function removeChatElements(node) {
+            if (!node) return;
             
-            // Remove by text content
-            document.querySelectorAll('div').forEach(div => {
-                if (div.textContent && div.textContent.includes('step 1: I\'ll start by importing')) {
-                    div.remove();
-                    removed = true;
+            // If this is the chat container itself, remove it
+            if (node.nodeType === 1) { // Element node
+                if (node.textContent && node.textContent.includes('step 1: I\'ll start by importing')) {
+                    node.remove();
+                    return;
                 }
-            });
-            
-            // Remove by input placeholder
-            document.querySelectorAll('input[placeholder="Type a message..."]').forEach(input => {
-                let element = input;
-                while (element && element.tagName !== 'BODY') {
-                    const parent = element.parentElement;
-                    element.remove();
-                    element = parent;
+                
+                // Check for chat input
+                if (node.tagName === 'INPUT' && node.getAttribute('placeholder') === 'Type a message...') {
+                    let element = node;
+                    while (element && element.tagName !== 'BODY') {
+                        const parent = element.parentElement;
+                        element.remove();
+                        element = parent;
+                    }
+                    return;
                 }
-                removed = true;
-            });
-            
-            // Remove any remaining chat-related elements
-            document.querySelectorAll('div').forEach(div => {
-                if (div.querySelector('input[placeholder="Type a message..."]')) {
-                    div.remove();
-                    removed = true;
-                }
-            });
-            
-            return removed;
+            }
         }
         
-        // Keep trying to remove elements until no more are found
-        let attempts = 0;
-        const maxAttempts = 10;
-        const interval = setInterval(() => {
-            const removed = removeChatElements();
-            attempts++;
-            
-            if (!removed || attempts >= maxAttempts) {
-                clearInterval(interval);
-            }
-        }, 500);
+        // Initial cleanup
+        document.querySelectorAll('*').forEach(removeChatElements);
+        
+        // Set up an observer to watch for new elements
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                // Handle new nodes
+                mutation.addedNodes.forEach(removeChatElements);
+                
+                // Also check the modified node itself
+                removeChatElements(mutation.target);
+            });
+        });
+        
+        // Start observing the entire document
+        observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
     }
     
-    // Call removeExistingChatContainers immediately and after a delay
-    removeExistingChatContainers();
-    setTimeout(removeExistingChatContainers, 2000);
+    // Call removeExistingChatContainers when the document is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', removeExistingChatContainers);
+    } else {
+        removeExistingChatContainers();
+    }
 
     // Apply theme immediately
     const darkThemeStyle = document.createElement('style');
