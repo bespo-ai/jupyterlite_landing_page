@@ -7,11 +7,8 @@ def modify_notebook():
     try:
         notebook = nbformat.read(notebook_path, nbformat.NO_CONVERT)
         
-        # Keep only the first markdown cell (hero section)
-        hero_cell = notebook.cells[0] if notebook.cells else new_markdown_cell(source='')
-        
-        # Create new cells
-        new_cells = [hero_cell]
+        # Create fresh cells list
+        new_cells = []
         
         # Add import vincent cell
         import_cell = new_code_cell(source='import vincent as v')
