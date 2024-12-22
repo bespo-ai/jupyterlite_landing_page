@@ -29,22 +29,7 @@ new_script = '''
         document.getElementsByClassName('jp-NotebookPanel-toolbar')[0]?.remove();
     }
 
-    function typeText(element, text, delay = 50) {
-        let i = 0;
-        return new Promise((resolve) => {
-            const interval = setInterval(() => {
-                if (i < text.length) {
-                    element.value += text.charAt(i);
-                    i++;
-                } else {
-                    clearInterval(interval);
-                    resolve();
-                }
-            }, delay);
-        });
-    }
-
-    // Removed chat interface function
+    // No chat-related functionality needed
 
     // Apply theme immediately
     const darkThemeStyle = document.createElement('style');
