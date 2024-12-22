@@ -7,13 +7,22 @@
             "jupyterlab-tour"
         ],
         "defaultUrl": "/notebooks",
-        "theme": "JupyterLab Night"
+        "theme": "JupyterLab Night",
+        "settingsOverrides": {
+            "@jupyterlab/apputils-extension:themes": {
+                "theme": "JupyterLab Night",
+                "theme-scrollbars": true
+            }
+        }
     },
     "federated_extensions": [
         "jupyterlab-night"
     ]
     }
 }
+  
+  
+  
   
   
   

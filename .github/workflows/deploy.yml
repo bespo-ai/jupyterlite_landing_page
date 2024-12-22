@@ -25,7 +25,10 @@ jobs:
       - name: Build the JupyterLite site
         run: |
           cp README.md content
+          mkdir -p dist/data
+          cp -r content/data dist/
           jupyter lite build --contents content --output-dir dist
+          cp repl/overrides.json dist/
       - name: Run Script to Inject Custom JS
         run: python script.py
       - name: Copy data directory
