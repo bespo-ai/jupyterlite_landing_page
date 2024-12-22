@@ -21,9 +21,22 @@
             }
         }
     },
-    "federated_extensions": ["jupyterlab-night"]
+    "federated_extensions": [
+        "@jupyterlab/theme-dark-extension",
+        "jupyterlab-night",
+        "@jupyterlab/notebook-extension",
+        "@jupyterlab/rendermime-extension",
+        "@jupyterlab/docregistry-extension",
+        "@jupyterlab/apputils-extension",
+        "@jupyterlab/coreutils-extension",
+        "@jupyterlab/translation-extension",
+        "@jupyterlab/ui-components-extension"
+    ]
     }
 }
+  
+  
+  
   
   
   
