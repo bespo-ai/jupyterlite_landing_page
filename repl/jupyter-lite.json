@@ -21,12 +21,15 @@
             }
         }
     },
-    "federated_extensions": [
-        "jupyterlab-night",
-        "@jupyterlab/theme-dark-extension"
-    ]
+    "federated_extensions": ["jupyterlab-night"]
     }
 }
+  
+  
+  
+  
+  
+  
   
   
   
