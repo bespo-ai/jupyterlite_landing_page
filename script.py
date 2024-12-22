@@ -30,34 +30,52 @@ new_script = '''
     }
 
     // Initialize notebook and remove chat containers
-    async function initializeNotebookAndRemoveChat() {
-        // Function to remove chat elements
-        function removeChatElements() {
-            const elementsToRemove = Array.from(document.querySelectorAll('*')).filter(el => {
-                if (!el || !el.parentNode) return false;
-                
-                // Check text content
-                const text = el.textContent || '';
-                if (text.includes('step 1:') || text.includes('Type a message')) {
-                    return true;
+    function initializeNotebookAndRemoveChat() {
+        // Immediately remove chat-related elements
+        const chatPatterns = ['step 1:', 'Type a message', 'chat'];
+        const chatSelectors = [
+            'input[placeholder*="message"]',
+            'div[style*="position: fixed"]',
+            '.jp-Cell-inputWrapper:empty',
+            '*[class*="chat"]',
+            '*[id*="chat"]'
+        ];
+
+        function removeElement(el) {
+            try {
+                if (el && el.parentNode) {
+                    // Hide first to prevent flashing
+                    el.style.display = 'none';
+                    el.parentNode.removeChild(el);
                 }
-                
-                // Check element attributes
-                const hasMessageInput = el.tagName === 'INPUT' && 
-                    el.getAttribute('placeholder')?.includes('message');
-                const hasChatClass = Array.from(el.classList || [])
-                    .some(cls => cls.toLowerCase().includes('chat'));
-                const hasChatId = el.id?.toLowerCase().includes('chat');
-                const isFixedPosition = el.style?.position === 'fixed';
-                
-                return hasMessageInput || hasChatClass || hasChatId || isFixedPosition;
+            } catch (e) {
+                console.error('Error removing element:', e);
+            }
+        }
+
+        function aggressiveCleanup() {
+            // Remove by content
+            document.querySelectorAll('*').forEach(el => {
+                const text = (el.textContent || '').toLowerCase();
+                if (chatPatterns.some(pattern => text.includes(pattern.toLowerCase()))) {
+                    removeElement(el);
+                }
             });
-            
-            elementsToRemove.forEach(el => {
+
+            // Remove by selectors
+            chatSelectors.forEach(selector => {
                 try {
-                    el.remove();
+                    document.querySelectorAll(selector).forEach(removeElement);
                 } catch (e) {
-                    console.error('Error removing element:', e);
+                    console.error('Selector error:', e);
+                }
+            });
+
+            // Remove fixed position elements that might be chat UI
+            document.querySelectorAll('div').forEach(el => {
+                const style = window.getComputedStyle(el);
+                if (style.position === 'fixed' && style.bottom === '0px') {
+                    removeElement(el);
                 }
             });
         }
@@ -66,50 +84,66 @@ new_script = '''
         function initializeNotebookCells() {
             const cells = document.querySelectorAll('.jp-Cell');
             cells.forEach((cell, index) => {
-                // Ensure cell is visible and properly styled
-                cell.style.display = 'block';
-                cell.style.visibility = 'visible';
-                cell.style.opacity = '1';
+                // Force display
+                cell.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
                 
-                // Add proper cell numbers
+                // Set input prompt
                 const prompt = cell.querySelector('.jp-InputPrompt');
                 if (prompt) {
                     prompt.textContent = `[${index + 1}]:`;
                 }
+
+
+                // Ensure code content is visible
+                const editor = cell.querySelector('.jp-Editor');
+                if (editor) {
+                    editor.style.cssText = 'visibility: visible !important; display: block !important;';
+                }
             });
         }
 
-        // Initial cleanup and initialization
-        removeChatElements();
+        // Initial aggressive cleanup
+        aggressiveCleanup();
         initializeNotebookCells();
-        
-        // Continuous cleanup and initialization
-        const cleanupInterval = setInterval(() => {
-            removeChatElements();
+
+        // Continuous cleanup for 10 seconds
+        const interval = setInterval(() => {
+            aggressiveCleanup();
             initializeNotebookCells();
-        }, 100);
-        
-        // Stop interval after 5 seconds
+        }, 50);
+
         setTimeout(() => {
-            clearInterval(cleanupInterval);
-            console.log('Cleanup and initialization completed');
-        }, 5000);
-        
-        // Use MutationObserver for dynamic content
-        const observer = new MutationObserver(() => {
-            removeChatElements();
-            initializeNotebookCells();
+            clearInterval(interval);
+            console.log('Final cleanup completed');
+        }, 10000);
+
+        // MutationObserver for dynamic content
+        const observer = new MutationObserver((mutations) => {
+            let shouldCleanup = false;
+            
+            mutations.forEach(mutation => {
+                if (mutation.addedNodes.length > 0 || 
+                    mutation.type === 'characterData' ||
+                    (mutation.type === 'attributes' && mutation.target.nodeType === 1)) {
+                    shouldCleanup = true;
+                }
+            });
+
+            if (shouldCleanup) {
+                aggressiveCleanup();
+                initializeNotebookCells();
+            }
         });
-        
+
         observer.observe(document.documentElement, {
             childList: true,
             subtree: true,
             characterData: true,
-            attributes: true
+            attributes: true,
+            attributeOldValue: true
         });
 
-
-        console.log('Notebook initialization and chat removal started');
+        console.log('Enhanced notebook initialization and chat removal started');
     }
     
     // Initialize notebook and remove chat when the document is ready
