@@ -145,33 +145,26 @@ new_script = '''
     }
 
     function changeKeyboardShortcuts() {
-        // Wait for Jupyter notebook to be fully initialized
-        if (window.jupyter && window.jupyter.notebook) {
-            // Replace Shift+Enter with Enter for running cells
-            const runShortcut = {
-                command: 'notebook:run-cell-and-select-next',
-                keys: ['Enter'],
-                selector: '.jp-Notebook:focus'
-            };
-            
-            // Remove old shortcut and add new one
-            try {
-                const commandRegistry = window.jupyter.commands;
-                if (commandRegistry) {
-                    // Remove the old Shift+Enter binding
-                    commandRegistry.removeKeyBinding('shift-enter');
-                    // Add the new Enter binding
-                    commandRegistry.addKeyBinding(runShortcut);
+        // Add event listener for Enter key on cells
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                const activeElement = document.activeElement;
+                const cell = activeElement?.closest('.jp-Cell');
+                
+                if (cell && !activeElement.matches('textarea, input')) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     
-                    // Removed Enter key event listener - using default Shift+Enter behavior
+                    // Find and click the run button
+                    const runButton = document.querySelector('.jp-Toolbar-item button[data-command="notebook:run-cell-and-select-next"]');
+                    if (runButton) {
+                        runButton.click();
+                    }
                 }
-            } catch (error) {
-                console.warn('Failed to update keyboard shortcuts:', error);
             }
-        } else {
-            // Retry after a short delay if Jupyter is not ready
-            setTimeout(changeKeyboardShortcuts, 100);
-        }
+        }, true);
+        
+        console.log('Enter key shortcut handler installed');
     }
 
     function pollForHeaders() {
