@@ -31,31 +31,56 @@ new_script = '''
 
     // Remove any existing chat containers
     function removeExistingChatContainers() {
-        // Remove chat containers and their parent elements
-        const chatContainers = Array.from(document.getElementsByTagName('div')).filter(div => 
-            div.textContent.includes('step 1: I\'ll start by importing') ||
-            div.querySelector('input[placeholder="Type a message..."]')
-        );
+        // Function to recursively remove chat-related elements
+        function removeChatElements() {
+            let removed = false;
+            
+            // Remove by text content
+            document.querySelectorAll('div').forEach(div => {
+                if (div.textContent && div.textContent.includes('step 1: I\'ll start by importing')) {
+                    div.remove();
+                    removed = true;
+                }
+            });
+            
+            // Remove by input placeholder
+            document.querySelectorAll('input[placeholder="Type a message..."]').forEach(input => {
+                let element = input;
+                while (element && element.tagName !== 'BODY') {
+                    const parent = element.parentElement;
+                    element.remove();
+                    element = parent;
+                }
+                removed = true;
+            });
+            
+            // Remove any remaining chat-related elements
+            document.querySelectorAll('div').forEach(div => {
+                if (div.querySelector('input[placeholder="Type a message..."]')) {
+                    div.remove();
+                    removed = true;
+                }
+            });
+            
+            return removed;
+        }
         
-        chatContainers.forEach(container => {
-            // Try to remove the entire container and its parent
-            if (container.parentElement) {
-                container.parentElement.remove();
+        // Keep trying to remove elements until no more are found
+        let attempts = 0;
+        const maxAttempts = 10;
+        const interval = setInterval(() => {
+            const removed = removeChatElements();
+            attempts++;
+            
+            if (!removed || attempts >= maxAttempts) {
+                clearInterval(interval);
             }
-            container.remove();
-        });
-        
-        // Also remove any remaining input elements
-        const inputElements = document.querySelectorAll('input[placeholder="Type a message..."]');
-        inputElements.forEach(element => {
-            let parent = element.parentElement;
-            while (parent && parent.tagName !== 'BODY') {
-                const next = parent.parentElement;
-                parent.remove();
-                parent = next;
-            }
-        });
+        }, 500);
     }
+    
+    // Call removeExistingChatContainers immediately and after a delay
+    removeExistingChatContainers();
+    setTimeout(removeExistingChatContainers, 2000);
 
     // Apply theme immediately
     const darkThemeStyle = document.createElement('style');
