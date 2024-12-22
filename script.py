@@ -1,26 +1,3 @@
-from bs4 import BeautifulSoup
-
-# Load the existing HTML file
-input_file_path = 'dist/notebooks/index.html'
-output_file_path = 'dist/notebooks/index.html'
-
-with open(input_file_path, 'r', encoding='utf-8') as file:
-    soup = BeautifulSoup(file, 'html.parser')
-
-# Find the head tag
-head_tag = soup.find('head')
-
-# Create and add viewport meta tag to prevent mobile zoom
-viewport_meta = soup.new_tag('meta')
-viewport_meta['name'] = 'viewport'
-viewport_meta['content'] = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
-head_tag.append(viewport_meta)
-
-# Find the specific <script> tag to insert after
-target_script = soup.find('script', text=lambda text: text and 'index.html' in text)
-
-print(f'Modified HTML saved to ')
-# Create the new script and style tags
 new_script = '''
 <script>
     function removeNotebookHeaders() {
@@ -34,25 +11,34 @@ new_script = '''
         // Immediately remove chat-related elements
         const chatPatterns = ['step 1:', 'Type a message', 'chat', 'I\'ll start by importing'];
         const chatSelectors = [
+            // Chat-specific elements
             'input[placeholder*="message"]',
             'div[style*="position: fixed"]',
-            '.jp-Cell-inputWrapper:empty',
             '*[class*="chat"]',
             '*[id*="chat"]',
-            'div[class*="input"]',
-            'button:not(.jp-Button)',
-            'div:empty',
-            'div.lm-Widget:empty',
+            // Input and button elements
+            'input[type="text"]',
+            'button:not(.jp-Button):not(.jp-ToolbarButtonComponent)',
+            // Step and message elements
+            'div:contains("step")',
+            'div:contains("Step")',
+            'div:contains("I\'ll start by")',
+            // Empty elements
+            'div:empty:not(.jp-Cell *)',
+            'div.lm-Widget:empty:not(.jp-Cell *)',
+            // Additional chat-related elements
             '[aria-label*="chat"]',
-            '[title*="chat"]'
+            '[title*="chat"]',
+            '[placeholder*="Type"]',
+            // Remove all cells except first two
+            '.jp-Cell:nth-child(n+3)'
         ];
 
         function removeElement(el) {
             try {
-                if (el && el.parentNode) {
-                    // Hide first to prevent flashing
-                    el.style.display = 'none';
-                    el.parentNode.removeChild(el);
+                if (el && el.parentNode && !el.closest('.jp-Cell')) {
+                    console.log('Removing element:', el.outerHTML.slice(0, 100));
+                    el.remove();
                 }
             } catch (e) {
                 console.error('Error removing element:', e);
@@ -60,15 +46,30 @@ new_script = '''
         }
 
         function aggressiveCleanup() {
-            // Remove by content
-            document.querySelectorAll('*').forEach(el => {
-                const text = (el.textContent || '').toLowerCase();
-                if (chatPatterns.some(pattern => text.includes(pattern.toLowerCase()))) {
-                    removeElement(el);
-                }
-            });
+            console.log('Starting aggressive cleanup');
+            
+            // Remove all cells except first two
+            const notebook = document.querySelector('.jp-Notebook');
+            if (notebook) {
+                const cells = Array.from(notebook.querySelectorAll('.jp-Cell'));
+                cells.slice(2).forEach(cell => cell.remove());
+                
+                // Ensure remaining cells have correct content
+                const expectedCells = [
+                    { content: 'import vincent as v', index: 1 },
+                    { content: 'help(v)', index: 2 }
+                ];
+                
+                cells.slice(0, 2).forEach((cell, idx) => {
+                    const expected = expectedCells[idx];
+                    const editor = cell.querySelector('.jp-Editor');
+                    if (editor) {
+                        editor.querySelector('.CodeMirror-code').innerHTML = `<pre>${expected.content}</pre>`;
+                    }
+                });
+            }
 
-            // Remove by selectors
+            // Remove chat-related elements
             chatSelectors.forEach(selector => {
                 try {
                     document.querySelectorAll(selector).forEach(removeElement);
@@ -77,11 +78,14 @@ new_script = '''
                 }
             });
 
-            // Remove fixed position elements that might be chat UI
-            document.querySelectorAll('div').forEach(el => {
-                const style = window.getComputedStyle(el);
-                if (style.position === 'fixed' && style.bottom === '0px') {
-                    removeElement(el);
+
+            // Remove by content patterns
+            document.querySelectorAll('*').forEach(el => {
+                if (!el.closest('.jp-Cell')) {
+                    const text = (el.textContent || '').toLowerCase();
+                    if (chatPatterns.some(pattern => text.includes(pattern.toLowerCase()))) {
+                        removeElement(el);
+                    }
                 }
             });
         }
@@ -160,25 +164,18 @@ new_script = '''
             });
         }
 
-        // Initial aggressive cleanup
+        // Initial cleanup and cell initialization
         aggressiveCleanup();
-        initializeNotebookCells();
-
-        // Continuous cleanup for 10 seconds
-        const interval = setInterval(() => {
-            aggressiveCleanup();
-            initializeNotebookCells();
-        }, 50);
-
-        setTimeout(() => {
-            clearInterval(interval);
-            console.log('Final cleanup completed');
-        }, 10000);
-
-        // MutationObserver for dynamic content
+        
+        // Run cleanup multiple times to catch dynamically added elements
+        const cleanupTimes = [0, 100, 500, 1000, 2000, 5000];
+        cleanupTimes.forEach(delay => {
+            setTimeout(aggressiveCleanup, delay);
+        });
+        
+        // Set up permanent observer for dynamic content
         const observer = new MutationObserver((mutations) => {
             let shouldCleanup = false;
-            
             mutations.forEach(mutation => {
                 if (mutation.addedNodes.length > 0 || 
                     mutation.type === 'characterData' ||
@@ -186,7 +183,7 @@ new_script = '''
                     shouldCleanup = true;
                 }
             });
-
+            
             if (shouldCleanup) {
                 aggressiveCleanup();
                 initializeNotebookCells();
@@ -470,12 +467,14 @@ new_style = '''
 </style>
 '''
 
-# Insert the new script and style after the target script
-target_script.insert_after(BeautifulSoup(new_style, 'html.parser'))
-target_script.insert_after(BeautifulSoup(new_script, 'html.parser'))
+# Write the script content to a file in the content/js directory
+output_dir = 'content/js'
+output_file = f'{output_dir}/script.js'
 
-# Save the modified HTML to a new file
-with open(output_file_path, 'w', encoding='utf-8') as file:
-    file.write(str(soup))
+import os
+os.makedirs(output_dir, exist_ok=True)
 
-print(f'Modified HTML saved to {output_file_path}')
+with open(output_file, 'w', encoding='utf-8') as file:
+    file.write(new_script + new_style)
+
+print(f'Script saved to {output_file}')
