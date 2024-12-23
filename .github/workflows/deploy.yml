@@ -18,24 +18,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install the dependencies
-        run: |
-          python -m pip install -r requirements.txt
-          python -m pip install beautifulsoup4
       - name: Build the JupyterLite site
         run: |
-          cp README.md content
-          jupyter lite build --contents content --output-dir dist
-      - name: Run Script to Inject Custom JS
-        run: python script.py
-      - name: Copy data directory
-        run: |
-          mkdir -p dist/data
-          cp -r content/data dist/
+          python build.py
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ./_output
 
   deploy:
     needs: build
