@@ -61,8 +61,9 @@ def run_jupyter_lite():
     """Run jupyter lite build command"""
     print("Building JupyterLite site...")
     
+    python_cmd = 'venv/bin/python' if os.name != 'nt' else r'venv\Scripts\python'
     subprocess.run([
-        sys.executable,
+        python_cmd,
         '-m',
         'jupyter',
         'lite',
