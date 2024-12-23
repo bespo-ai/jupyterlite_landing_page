@@ -34,14 +34,19 @@ def clean_output():
 def create_wheel():
     """Create a wheel package for vincent"""
     print("Creating wheel package...")
+    # First ensure wheel is installed
+    pip_cmd = 'venv/bin/pip' if os.name != 'nt' else r'venv\Scripts\pip'
+    subprocess.run([pip_cmd, 'install', 'wheel', 'setuptools'], check=True)
+    
     # Create wheels directory for explicit wheels
     wheels_dir = 'wheels'
     if not os.path.exists(wheels_dir):
         os.makedirs(wheels_dir)
     
     # Build the wheel in wheels directory
+    pip_cmd = 'venv/bin/python' if os.name != 'nt' else r'venv\Scripts\python'
     subprocess.run([
-        sys.executable, 
+        pip_cmd,  # Use venv python instead of sys.executable
         'setup.py', 
         'bdist_wheel', 
         '-d', 
@@ -73,9 +78,9 @@ def post_build_script():
 def main():
     try:
         create_venv()
-        install_requirements()
+        install_requirements()  # This installs requirements.txt
         clean_output()
-        create_wheel()
+        create_wheel()         # Now wheel package is available
         run_jupyter_lite()
         post_build_script()
         print("Build completed successfully!")
