@@ -1,8 +1,34 @@
 from IPython.display import Image, Markdown, HTML
 import pandas as pd
+import plotly.express as px
+import random
+
 
 def welcome():
-    print("Welcome to Vincent's landing page!\nVincent can operate a Jupyter notebook to do multistep tasks for you.\nGo ahead explore this landing page through your curiosity.")
+    print("Welcome to Vincent's landing page!\nVincent can operate a notebook to do multistep tasks for you.\nGo ahead explore this landing page through your curiosity.\n")
+
+def vincent_help():
+    print("Vincent's landing page methods:")
+    methods = [
+    ("what_does_vincent_do()", "What Vincent actually does. Technically"),
+    ("common_use_cases()", "How users are using Vincent"),
+    ("join_waitlist()", "A button to join the waitlist"),
+    ("privacy()", "Vincent's privacy and security details"),
+    ("extendable()", "How to extend Vincent through an opensource skills"),
+    ("manifesto()", "Why we're building Vincent, and how it's different"),
+    ("features()", "Vincent's standout capabilities"),
+    ("loved_by()", "How users and developers are leveraging Vincent"),
+    ("about()", "About this landing page"),
+    ("pricing()", "Pricing details"),
+]
+
+# Formatting the table as plain text
+    print(f"{'Method':<25} {'Description'}")
+    print("=" * 60)
+    for method, description in methods:
+        print(f"{method:<25} {description}")
+    return
+
 
 def what_does_vincent_do():
     """Shows Vincent's main capabilities through a visual demonstration."""
@@ -56,11 +82,32 @@ def manifesto():
     with open('data/manifesto.md', 'r') as f:
         return Markdown(f.read())
 
-def features():
-    """Discover the standout capabilities of Vincent."""
-    return "Vincent's features include notebook operation, code assistance, and natural language interaction capabilities."
 
-def love_by():
+def feature_importance():
+    """Discover the standout capabilities of Vincent."""
+    feature_importance = {
+        "Error correction": "Automatically detects and fixes code errors in real-time",
+        "Prompt enhancement": "Improves user prompts for better results and clearer communication",
+        "Custom Instructions": "Allows users to set persistent preferences and coding styles",
+        "Control Permissions": "Granular control over what Vincent can access and modify",
+        "Context": "Maintains awareness of the full codebase and conversation history",
+        "Steps": "Breaks down complex tasks into clear, manageable steps"
+    }
+    # Feature names and arbitrary importance values
+    features = list(feature_importance.keys())
+    importance_values = [random.uniform(0, 1) for _ in features]  # Generate random importance values
+
+    # Create a DataFrame for plotting
+    importance_df = pd.DataFrame({'Feature': features, 'Importance': importance_values, 'Description': list(feature_importance.values())})
+
+    # Create an interactive bar plot
+    fig = px.bar(importance_df, x='Feature', y='Importance', 
+                title='Feature Importance',
+                hover_data={'Description': True},  # Only show descriptions on hover
+                labels={'Importance': 'Importance Value'})
+    fig.show()
+    return  
+def loved_by():
     """See how users and developers are leveraging Vincent effectively."""
     return Markdown("""
 #### Seffi Cohen ⭐⭐⭐⭐⭐
@@ -80,32 +127,5 @@ And we want to let them.""")
 
 def pricing():
     """Learn about Vincent's pricing."""
-    return "While in beta, Vincent is completely free to use. Even after the beta, Vincent will always have a free tier."
+    return print("While in beta, Vincent is completely free to use. Even after the beta, Vincent will always have a free tier.")    
 
-def vincent_help():
-    return pd.DataFrame({
-        'Method': [
-            'what_does_vincent_do()',
-            'common_use_cases()',
-            'join_waitlist()',
-            'privacy()',
-            'extendable()',
-            'manifesto()',
-            'features()',
-            'love_by()',
-            'about()',
-            'pricing()'
-        ],
-        'Description': [
-            'What vincent actually does. Technically',
-            'How users are using Vincent',
-            'a button to join the waitlist',
-            'Vincent\'s privacy and security details', 
-            'How to extend Vincent through an opensource framework',
-            'Why we\'re building Vincent, and how it\'s different',
-            'Vincent\'s standout capabilities',
-            'Why data scientists love Vincent',
-            'About this landing page, not about us=]',
-            'Pricing details'
-        ]
-    })
