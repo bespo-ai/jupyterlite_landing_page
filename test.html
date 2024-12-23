@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pyodide + CodeMirror Example</title>
+    <!-- Pandas styling -->
+    <link rel="stylesheet" href="https://raw.githubusercontent.com/dunovank/jupyter-themes/refs/heads/master/jupyterthemes/styles/compiled/dorkula.css">
+
+    <!-- Load CodeMirror CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.6/codemirror.min.css"
+    />
+    <!-- CodeMirror theme (optional, pick one you like) -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.6/theme/eclipse.min.css"
+    />
+    <!-- CodeMirror Python mode -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.6/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.6/mode/python/python.min.js"></script>
+    <!-- Load Pyodide -->
+    <script
+      src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"
+      defer
+    ></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      #editor {
+        border: 1px solid #ccc;
+        height: auto;
+      }
+      #runButton {
+        margin-top: 5px;
+        padding: 6px 12px;
+      }
+      #output {
+        margin-top: 20px;
+        white-space: pre-wrap; /* preserve newlines */
+        border: 1px solid #ccc;
+        padding: 10px;
+        background: #fafafa;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Pyodide “Notebook” Example</h2>
+    <p>Edit the Python code in the cell below, then click “Run” to execute.</p>
+    
+    <!-- Container for CodeMirror editor -->
+    <div id="editor"></div>
+    <button id="runButton">Run Cell</button>
+
+    <!-- Div to display execution output -->
+    <div id="output"></div>
+
+    <!-- Setup and logic -->
+    <script>
+      let pyodide;
+      let editor;
+      let packagesLoaded = false;
+
+      const pythonCode = `import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Create a sample DataFrame
+df = pd.DataFrame([1,2])
+df
+`;
+
+      // Initialize CodeMirror with Python mode
+      window.addEventListener("load", async () => {
+        editor = CodeMirror(document.getElementById("editor"), {
+          value: pythonCode,
+          mode: "python",
+          theme: "eclipse",
+          lineNumbers: true,
+        });
+
+        // Show loading status
+        document.getElementById("output").innerHTML = "Loading Python environment...";
+        document.getElementById("runButton").disabled = true;
+
+        try {
+          await loadPyodideAndPackages();
+          document.getElementById("output").innerHTML = "Ready!";
+          document.getElementById("runButton").disabled = false;
+          packagesLoaded = true;
+        } catch (err) {
+          document.getElementById("output").innerHTML = "Error loading Python environment: " + err;
+        }
+      });
+
+      async function loadPyodideAndPackages() {
+        pyodide = await loadPyodide({
+          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/",
+        });
+        // Load packages explicitly
+        await pyodide.loadPackage(["numpy", "pandas", "matplotlib", "ipython"]);
+      }
+
+      document
+        .getElementById("runButton")
+        .addEventListener("click", async () => {
+          if (!pyodide || !packagesLoaded) {
+            document.getElementById("output").innerHTML = "Python environment not ready yet. Please wait...";
+            return;
+          }
+          const code = editor.getValue();
+          const outputDiv = document.getElementById("output");
+          outputDiv.innerHTML = "Running...";
+
+          try {
+            // Set up output handling with IPython's HTML display
+            pyodide.runPython(`
+import sys, io
+from contextlib import redirect_stdout
+from IPython.display import HTML
+
+# Create a buffer for stdout
+sys.stdout_buf = io.StringIO()
+
+# Function to run code and return both stdout and the last expression value
+def run_code(code):
+    with redirect_stdout(sys.stdout_buf):
+        # Create a new dictionary for locals
+        local_dict = {}
+        # Execute the code in this local dictionary
+        exec(code, globals(), local_dict)
+        # Get the last variable defined
+        if len(local_dict) > 0:
+            last_value = list(local_dict.values())[-1]
+            if last_value is not None:
+                if hasattr(last_value, '_repr_html_'):
+                    print(last_value._repr_html_())
+                else:
+                    # Use IPython's HTML display for other types
+                    print(HTML(repr(last_value)).data)
+    
+    return sys.stdout_buf.getvalue()
+`);
+
+            // Execute user code and get output
+            const output = pyodide.runPython(`run_code("""${code.replace(/"/g, '\\"')}""")`);
+            outputDiv.innerHTML = output || "No output";
+          } catch (err) {
+            outputDiv.innerHTML = "Error:\n" + err;
+          }
+        });
+    </script>
+  </body>
+</html>

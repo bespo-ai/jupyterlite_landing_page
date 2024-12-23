@@ -1,5 +1,4 @@
 from IPython.display import Image, Markdown, HTML
-import pandas as pd
 
 def welcome():
     print("Welcome to Vincent's landing page!\nVincent can operate a Jupyter notebook to do multistep tasks for you.\nGo ahead explore this landing page through your curiosity.")
@@ -83,7 +82,9 @@ def pricing():
     return "While in beta, Vincent is completely free to use. Even after the beta, Vincent will always have a free tier."
 
 def vincent_help():
-    return pd.DataFrame({
+    # import pandas as pd
+
+    return """{
         'Method': [
             'what_does_vincent_do()',
             'common_use_cases()',
@@ -108,4 +109,4 @@ def vincent_help():
             'About this landing page, not about us=]',
             'Pricing details'
         ]
-    })
+    }"""

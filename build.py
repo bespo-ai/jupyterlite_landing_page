@@ -31,12 +31,38 @@ def clean_output():
     # Just create _output, let JupyterLite handle its internal structure
     output_dir.mkdir(exist_ok=True)
 
+def create_wheel():
+    """Create a wheel package for vincent"""
+    print("Creating wheel package...")
+    # Create wheels directory for explicit wheels
+    wheels_dir = 'wheels'
+    if not os.path.exists(wheels_dir):
+        os.makedirs(wheels_dir)
+    
+    # Build the wheel in wheels directory
+    subprocess.run([
+        sys.executable, 
+        'setup.py', 
+        'bdist_wheel', 
+        '-d', 
+        wheels_dir
+    ], check=True)
+    
+    wheels = [f for f in os.listdir(wheels_dir) if f.endswith('.whl')]
+    if wheels:
+        print(f"Created wheels: {wheels}")
+
 def run_jupyter_lite():
     """Run jupyter lite build command"""
-    python_cmd = 'venv/bin/python' if os.name != 'nt' else r'venv\Scripts\python'
     print("Building JupyterLite site...")
-    # Let jupyter_lite_config.json handle the configuration
-    subprocess.run([python_cmd, '-m', 'jupyter', 'lite', 'build'], check=True)
+    
+    subprocess.run([
+        sys.executable,
+        '-m',
+        'jupyter',
+        'lite',
+        'build'
+    ], check=True)
 
 def post_build_script():
     """Run post build script"""
@@ -49,14 +75,12 @@ def main():
         create_venv()
         install_requirements()
         clean_output()
+        create_wheel()
         run_jupyter_lite()
         post_build_script()
         print("Build completed successfully!")
     except subprocess.CalledProcessError as e:
         print(f"Error during build process: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"Unexpected error: {e}")
         sys.exit(1)
 
 if __name__ == '__main__':

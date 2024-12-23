@@ -2,6 +2,12 @@
     "LiteBuildConfig": {
         "output_dir": "_output",
         "contents": ["content"],
-        "apps": ["notebooks"]
-    }
+        "apps": ["notebooks"],
+        "ignore_sys_prefix": false
+    },
+   "PipliteAddon": {
+    "piplite_urls": [
+      "./wheels/vincent-0.1.0-py3-none-any.whl"
+    ]
+  }
 } 
