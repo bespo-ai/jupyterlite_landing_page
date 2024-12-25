@@ -1,7 +1,5 @@
-from IPython.display import Image, Markdown, HTML
-import pandas as pd
+from IPython.display import Image, Markdown, HTML, display
 import plotly.express as px
-import random
 
 
 def welcome():

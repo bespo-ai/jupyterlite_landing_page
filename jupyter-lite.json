@@ -1,0 +1,16 @@
+{
+    "jupyter-lite-schema-version": 0,
+    "jupyter-config-data": {
+      "appUrl": "./notebooks/index.html?path=landing_page.ipynb",
+      "disabledExtensions": ["jupyterlab-kernel-spy", "jupyterlab-tour"],
+      "exposeAppInBrowser": true,
+      "enableMemoryStorage": true,
+      "settingsStorageDrivers": ["memoryStorageDriver"],
+      "contentsStorageDrivers": ["memoryStorageDriver"],
+      "litePluginSettings": {
+        "@jupyterlite/pyodide-kernel-extension:kernel": {
+          "disablePyPIFallback": true
+        }
+      }
+    }
+  }
