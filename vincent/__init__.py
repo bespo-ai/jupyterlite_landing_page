@@ -1,4 +1,4 @@
-from .vincent import (
+from ..content.vincent import (
     welcome,
     what_does_vincent_do,
     common_use_cases,
