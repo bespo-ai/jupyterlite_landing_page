@@ -1,0 +1,20 @@
+{
+  "name": "jupyterlite-chat",
+  "version": "0.1.0",
+  "description": "Chat interface for JupyterLite",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "style": "style/index.css",
+  "jupyterlab": {
+    "extension": true
+  },
+  "dependencies": {
+    "@jupyterlab/application": "^4.0.0",
+    "@lumino/widgets": "^2.0.0"
+  }
+}
